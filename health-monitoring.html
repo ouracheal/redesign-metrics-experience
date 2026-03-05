@@ -17,62 +17,19 @@
       overflow: hidden;
     }
 
-    /* ── Top Nav ── */
-    .nav {
-      display: flex;
-      align-items: center;
-      background: #fff;
-      border-bottom: 1px solid #e5e5ed;
-      padding: 0 24px;
-      height: 52px;
-      gap: 0;
-      flex-shrink: 0;
-    }
-    .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 700;
-      font-size: 15px;
-      color: #1a1a2e;
-      margin-right: 28px;
-    }
-    .nav-logo svg { color: #7c3aed; }
-    .nav-tabs { display: flex; align-items: stretch; height: 100%; flex: 1; }
-    .nav-tab {
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      font-size: 14px;
-      color: #6b7280;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      white-space: nowrap;
-    }
-    .nav-tab:hover { color: #1a1a2e; }
-    .nav-tab.active { color: #7c3aed; border-bottom: 2px solid #7c3aed; font-weight: 500; }
-    .nav-tab.more { font-size: 18px; letter-spacing: 2px; color: #9ca3af; }
-    .nav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
     .btn-outline {
       display: flex; align-items: center; gap: 6px;
       padding: 6px 14px; border: 1px solid #d1d5db; border-radius: 6px;
       background: #fff; font-size: 13px; color: #374151; cursor: pointer; white-space: nowrap;
+      transition: background 0.15s;
     }
     .btn-outline:hover { background: #f9fafb; }
-    .btn-time { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; font-size: 13px; color: #374151; cursor: pointer; }
-    .btn-tz {
-      display: flex; flex-direction: column; align-items: flex-start;
-      padding: 4px 14px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; cursor: pointer; gap: 1px;
-    }
-    .btn-tz .tz-label { font-size: 11px; color: #6b7280; }
-    .btn-tz .tz-value { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #374151; font-weight: 500; }
-
     /* ── Sub Bar ── */
     .subbar {
       display: flex;
       align-items: center;
       background: #fff;
-      border-bottom: 1px solid #e5e5ed;
+      border-bottom: 1px solid #e5e7eb;
       padding: 0 24px;
       height: 48px;
       gap: 12px;
@@ -80,32 +37,42 @@
     }
     .back-btn {
       display: flex; align-items: center; gap: 6px;
-      font-size: 14px; color: #374151; cursor: pointer; text-decoration: none; margin-right: auto;
+      font-size: 14px; color: #6b7280; cursor: pointer; text-decoration: none; margin-right: auto;
+      transition: color 0.15s;
     }
     .back-btn:hover { color: #7c3aed; }
     .btn-save { padding: 6px 18px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; font-size: 13px; font-weight: 500; color: #374151; cursor: pointer; }
     .btn-primary { padding: 7px 18px; border: none; border-radius: 6px; background: #7c3aed; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; }
     .btn-primary:hover { background: #6d28d9; }
-    .legacy-link { font-size: 13px; color: #6b7280; cursor: pointer; white-space: nowrap; }
+    .legacy-link { font-size: 13px; color: #9ca3af; cursor: pointer; white-space: nowrap; }
 
     /* ── Search Bar ── */
     .search-bar-wrap {
       background: #fff;
-      border-bottom: 1px solid #e5e5ed;
+      border-bottom: 1px solid #e5e7eb;
       padding: 10px 24px;
       flex-shrink: 0;
     }
     .search-bar {
       display: flex; align-items: center;
-      border: 2px solid #7c3aed; border-radius: 8px; padding: 9px 14px; gap: 10px; background: #fff;
+      border: 1.5px solid rgba(124,58,237,0.4); border-radius: 10px; padding: 9px 14px; gap: 10px;
+      background: #fff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-bar:focus-within {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
     }
     .search-icon { color: #9ca3af; flex-shrink: 0; }
-    .search-bar input { flex: 1; border: none; outline: none; font-size: 14px; color: #374151; background: transparent; }
+    .search-bar input { flex: 1; border: none; outline: none; font-size: 14px; color: #1a1a2e; background: transparent; }
+    .search-bar input::placeholder { color: #9ca3af; }
     .btn-ai {
       display: flex; align-items: center; gap: 5px;
       background: #7c3aed; color: #fff; border: none; border-radius: 6px;
       padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(124,58,237,0.25);
     }
+    .btn-ai:hover { background: #6d28d9; }
 
     /* ── Main Layout ── */
     .main { display: flex; flex: 1; overflow: hidden; }
@@ -130,6 +97,7 @@
     .filter-item {
       display: flex; align-items: center; justify-content: space-between;
       padding: 7px 16px 7px 36px; cursor: pointer;
+      transition: background 0.1s;
     }
     .filter-item:hover { background: #f9fafb; }
     .filter-left { display: flex; align-items: center; gap: 8px; }
@@ -157,19 +125,66 @@
       display: flex; align-items: center; gap: 6px;
       background: #7c3aed; color: #fff; border: none; border-radius: 6px;
       padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(124,58,237,0.25);
     }
+    .btn-ai-suggestions:hover { background: #6d28d9; }
     .btn-ai-suggestions .sparkle { font-size: 12px; }
     .btn-export {
       padding: 7px 14px; border: 1px solid #d1d5db; border-radius: 6px;
       background: #fff; font-size: 13px; color: #374151; cursor: pointer;
+      transition: background 0.15s;
     }
     .btn-export:hover { background: #f9fafb; }
+
+    /* ── AI Suggestions Dropdown ── */
+    .ai-suggestions-wrap { position: relative; }
+    .ai-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      min-width: 220px;
+      z-index: 100;
+      overflow: hidden;
+    }
+    .ai-dropdown.open { display: block; }
+    .ai-dropdown-header {
+      padding: 10px 14px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .ai-dropdown-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px;
+      font-size: 13px;
+      color: #374151;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .ai-dropdown-item:hover { background: #faf9ff; color: #7c3aed; }
+    .ai-dropdown-item .item-icon {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: #ede9fe;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+    .ai-dropdown-item .item-text { display: flex; flex-direction: column; gap: 1px; }
+    .ai-dropdown-item .item-title { font-weight: 500; }
+    .ai-dropdown-item .item-sub { font-size: 11px; color: #9ca3af; }
 
     /* ── Table ── */
     .metrics-table {
       background: #fff;
       border: 1px solid #e5e7eb;
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
     }
     table { width: 100%; border-collapse: collapse; }
@@ -186,7 +201,7 @@
     }
     th.sortable { cursor: pointer; }
     th.sortable:hover { color: #374151; }
-    .sort-icon { margin-left: 4px; color: #9ca3af; font-size: 10px; }
+    .sort-icon { margin-left: 4px; color: #d1d5db; font-size: 10px; }
     td {
       padding: 13px 16px;
       font-size: 13px;
@@ -217,39 +232,21 @@
     .help-btn {
       position: fixed; bottom: 24px; right: 24px;
       width: 36px; height: 36px; border-radius: 50%;
-      background: #fff; border: 1px solid #d1d5db;
+      background: #fff; border: 1px solid #e5e7eb;
       display: flex; align-items: center; justify-content: center;
       font-size: 16px; color: #6b7280; cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
   </style>
 </head>
 <body>
 
-  <!-- Top Nav -->
-  <nav class="nav">
-    <div class="nav-logo">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-      </svg>
-      Metrics
-    </div>
-    <div class="nav-tabs">
-      <div class="nav-tab">Overview</div>
-      <div class="nav-tab active">Explorer</div>
-      <div class="nav-tab">Summary</div>
-      <div class="nav-tab">Volume</div>
-      <div class="nav-tab more">···</div>
-    </div>
-    <div class="nav-right">
-      <button class="btn-outline">Configure Metrics ▾</button>
-      <button class="btn-time">1h</button>
-      <button class="btn-tz">
-        <span class="tz-label">UTC-05:00</span>
-        <span class="tz-value">Past 1 Hour ▾</span>
-      </button>
-    </div>
-  </nav>
 
   <!-- Sub Bar -->
   <div class="subbar">
@@ -258,8 +255,6 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       Last 24h ▾
     </button>
-    <button class="btn-save">Save</button>
-    <button class="btn-primary">Create Monitor</button>
     <span class="legacy-link">Show legacy experience</span>
   </div>
 
@@ -272,7 +267,7 @@
         </svg>
       </span>
       <input type="text" id="searchInput" placeholder="Search metrics by name or tag…" value="Show me metrics that monitor the health of my platform" />
-      <button class="btn-ai">
+      <button class="btn-ai" onclick="navigateSearch()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
         AI
       </button>
@@ -401,9 +396,28 @@
       <div class="table-header">
         <span class="showing-label" id="showingLabel">Showing 1–12 of 12 metrics</span>
         <div class="table-actions">
-          <button class="btn-ai-suggestions">
-            <span class="sparkle">✦</span> AI Suggestions ▾
-          </button>
+          <div class="ai-suggestions-wrap">
+            <button class="btn-ai-suggestions" id="aiSuggestionsBtn" onclick="toggleAiDropdown(event)">
+              <span class="sparkle">✦</span> AI Suggestions ▾
+            </button>
+            <div class="ai-dropdown" id="aiDropdown">
+              <div class="ai-dropdown-header">Create from metrics</div>
+              <div class="ai-dropdown-item" onclick="createDashboard()">
+                <div class="item-icon">📊</div>
+                <div class="item-text">
+                  <div class="item-title">Create Dashboard</div>
+                  <div class="item-sub">Top 10 health metrics visualized</div>
+                </div>
+              </div>
+              <div class="ai-dropdown-item" onclick="createNotebook()">
+                <div class="item-icon">📓</div>
+                <div class="item-text">
+                  <div class="item-title">Create Notebook</div>
+                  <div class="item-sub">Exploratory analysis template</div>
+                </div>
+              </div>
+            </div>
+          </div>
           <button class="btn-export">Export as CSV</button>
         </div>
       </div>
@@ -488,9 +502,21 @@
       `).join('');
     }
 
+    function navigateSearch() {
+      const q = document.getElementById('searchInput').value.trim();
+      if (!q) return;
+      const listIntent = /\b(list|show me all|all metrics|every metric|browse|show me)\b/i.test(q);
+      window.location.href = listIntent
+        ? 'search-results.html?q=' + encodeURIComponent(q)
+        : 'query-result.html?q=' + encodeURIComponent(q);
+    }
+
     const input = document.getElementById('searchInput');
     input.addEventListener('input', e => render(e.target.value));
-    input.addEventListener('keydown', e => { if (e.key === 'Escape') { input.value = ''; render(''); } });
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') navigateSearch();
+      if (e.key === 'Escape') { input.value = ''; render(''); }
+    });
     // Focus clears the pre-filled prompt so user can type freely
     input.addEventListener('focus', function() {
       if (this.value === 'Show me metrics that monitor the health of my platform') {
@@ -499,8 +525,25 @@
       }
     });
 
-    // Initial render — show health-related metrics from the pre-filled query
-    render('Show me metrics that monitor the health of my platform');
+    // Initial render — use URL param if present, else default health query
+    const initQ = new URLSearchParams(window.location.search).get('q') || 'Show me metrics that monitor the health of my platform';
+    input.value = initQ;
+    render(initQ);
+
+    // AI Suggestions dropdown
+    function toggleAiDropdown(e) {
+      e.stopPropagation();
+      document.getElementById('aiDropdown').classList.toggle('open');
+    }
+    document.addEventListener('click', () => {
+      document.getElementById('aiDropdown').classList.remove('open');
+    });
+    function createDashboard() {
+      window.location.href = 'platform-health-dashboard.html';
+    }
+    function createNotebook() {
+      alert('Notebook creation coming soon!');
+    }
   </script>
 
 </body>

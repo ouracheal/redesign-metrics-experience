@@ -5,356 +5,322 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Metrics Explorer</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #f5f5f8;
       color: #1a1a2e;
-    }
-
-    /* ── Top Nav ── */
-    .nav {
-      display: flex;
-      align-items: center;
-      background: #ffffff;
-      border-bottom: 1px solid #e5e5ed;
-      padding: 0 24px;
-      height: 52px;
-      gap: 0;
-    }
-
-    .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 700;
-      font-size: 15px;
-      color: #1a1a2e;
-      margin-right: 28px;
-      white-space: nowrap;
-    }
-
-    .nav-logo svg {
-      color: #7c3aed;
-    }
-
-    .nav-tabs {
-      display: flex;
-      align-items: stretch;
-      height: 100%;
-      gap: 0;
-      flex: 1;
-    }
-
-    .nav-tab {
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      font-size: 14px;
-      color: #6b7280;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      height: 100%;
-      white-space: nowrap;
-      transition: color 0.15s;
-    }
-
-    .nav-tab:hover {
-      color: #1a1a2e;
-    }
-
-    .nav-tab.active {
-      color: #7c3aed;
-      border-bottom: 2px solid #7c3aed;
-      font-weight: 500;
-    }
-
-    .nav-tab.more {
-      font-size: 18px;
-      letter-spacing: 1px;
-      color: #9ca3af;
-    }
-
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-left: auto;
-    }
-
-    .btn-outline {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      background: #fff;
-      font-size: 13px;
-      color: #374151;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.15s;
-    }
-
-    .btn-outline:hover {
-      background: #f9fafb;
-    }
-
-    .btn-outline .chevron {
-      font-size: 10px;
-      color: #9ca3af;
-    }
-
-    .btn-time {
-      padding: 6px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      background: #fff;
-      font-size: 13px;
-      color: #374151;
-      cursor: pointer;
-    }
-
-    .btn-tz {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 4px 14px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      background: #fff;
-      cursor: pointer;
-      gap: 1px;
-    }
-
-    .btn-tz .tz-label {
-      font-size: 11px;
-      color: #6b7280;
-    }
-
-    .btn-tz .tz-value {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 13px;
-      color: #374151;
-      font-weight: 500;
-    }
-
-    .btn-tz .chevron {
-      font-size: 10px;
-      color: #9ca3af;
+      min-height: 100vh;
     }
 
     /* ── Hero ── */
     .hero {
-      background: linear-gradient(160deg, #f3f0ff 0%, #ede9fe 40%, #f5f3ff 100%);
-      padding: 72px 24px 60px;
-      text-align: center;
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px 60px;
+      overflow: hidden;
     }
 
+    /* Subtle orbs for light mode */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.12;
+      animation: drift 12s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    .orb-1 { width: 500px; height: 500px; background: #7c3aed; top: -120px; left: -100px; animation-delay: 0s; }
+    .orb-2 { width: 400px; height: 400px; background: #a78bfa; top: 20%; right: -80px; animation-delay: -4s; }
+    .orb-3 { width: 300px; height: 300px; background: #6d28d9; bottom: 10%; left: 30%; animation-delay: -8s; }
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(30px, 20px) scale(1.08); }
+    }
+
+    /* Grid overlay */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(124,58,237,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,58,237,0.05) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-width: 780px;
+      width: 100%;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(124,58,237,0.07);
+      border: 1px solid rgba(124,58,237,0.18);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #7c3aed;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .hero-eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: #7c3aed; }
+
     .hero h1 {
-      font-size: 52px;
+      font-size: 68px;
       font-weight: 800;
-      background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #8b5cf6 100%);
+      line-height: 1.05;
+      letter-spacing: -2.5px;
+      margin-bottom: 20px;
+      color: #111827;
+    }
+    .hero h1 .gradient-text {
+      background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 40%, #a78bfa 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      margin-bottom: 36px;
-      letter-spacing: -1px;
     }
 
+    .hero-sub {
+      font-size: 17px;
+      color: #6b7280;
+      line-height: 1.6;
+      max-width: 520px;
+      margin: 0 auto 44px;
+    }
+
+    /* Search */
     .search-wrap {
       display: flex;
       align-items: center;
-      max-width: 640px;
-      margin: 0 auto;
+      max-width: 660px;
+      margin: 0 auto 16px;
       background: #fff;
-      border: 1px solid #e5e5ed;
-      border-radius: 10px;
-      padding: 10px 14px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 6px 6px 6px 18px;
       gap: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-
-    .search-icon {
-      color: #9ca3af;
-      font-size: 16px;
-      flex-shrink: 0;
+    .search-wrap:focus-within {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.12), 0 2px 12px rgba(0,0,0,0.06);
     }
-
+    .search-icon { color: #9ca3af; flex-shrink: 0; }
     .search-wrap input {
-      flex: 1;
-      border: none;
-      outline: none;
-      font-size: 15px;
-      color: #374151;
-      background: transparent;
+      flex: 1; border: none; outline: none;
+      font-size: 15px; color: #111827; background: transparent;
     }
-
-    .search-wrap input::placeholder {
-      color: #9ca3af;
-    }
+    .search-wrap input::placeholder { color: #9ca3af; }
 
     .btn-ai {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      display: flex; align-items: center; gap: 7px;
       background: #7c3aed;
-      color: #fff;
-      border: none;
-      border-radius: 7px;
-      padding: 7px 14px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      flex-shrink: 0;
+      color: #fff; border: none; border-radius: 10px;
+      padding: 10px 20px; font-size: 14px; font-weight: 600;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(124,58,237,0.3);
       transition: background 0.15s;
     }
-
     .btn-ai:hover {
       background: #6d28d9;
+      transform: translateY(-1px);
     }
 
-    .btn-ai .sparkle {
-      font-size: 13px;
+    .search-hints {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; flex-wrap: wrap;
     }
-
-    .kbd {
-      display: inline-flex;
-      align-items: center;
-      background: #f3f4f6;
-      border: 1px solid #e5e7eb;
-      border-radius: 5px;
-      padding: 3px 8px;
-      font-size: 12px;
-      color: #6b7280;
-      flex-shrink: 0;
+    .hint-label { font-size: 12px; color: #9ca3af; }
+    .hint-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #fff; border: 1px solid #e5e7eb;
+      border-radius: 20px; padding: 4px 12px;
+      font-size: 12px; color: #6b7280;
+      cursor: pointer; transition: all 0.15s;
     }
+    .hint-chip:hover { background: #f3f0ff; border-color: #c4b5fd; color: #7c3aed; }
 
-    /* ── Content ── */
+    /* ── Cards section ── */
     .content {
-      max-width: 1100px;
+      position: relative;
+      z-index: 1;
+      max-width: 1080px;
       margin: 0 auto;
-      padding: 48px 24px 64px;
+      padding: 0 24px 80px;
     }
 
+    .section-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 20px;
+    }
     .section-label {
-      font-size: 14px;
-      font-weight: 700;
-      color: #111827;
-      margin-bottom: 16px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #9ca3af;
     }
+    .section-line { flex: 1; height: 1px; background: #e5e7eb; }
 
-    .cards {
-      display: grid;
-      gap: 16px;
-      margin-bottom: 40px;
-    }
-
-    .cards.three {
-      grid-template-columns: repeat(3, 1fr);
-    }
-
-    .cards.two {
-      grid-template-columns: repeat(2, 1fr);
-      max-width: 640px;
-    }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 
     .card {
+      position: relative;
       background: #fff;
       border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 22px 24px;
+      border-radius: 16px;
+      padding: 26px 26px 22px;
       cursor: pointer;
-      transition: box-shadow 0.15s, border-color 0.15s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
     }
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 20% 20%, rgba(124,58,237,0.04), transparent 60%);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .card:hover { border-color: rgba(124,58,237,0.3); transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.08); }
+    .card:hover::before { opacity: 1; }
 
-    .card:hover {
-      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-      border-color: #c4b5fd;
+    .card-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; margin-bottom: 16px;
     }
 
     .card-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #111827;
-      margin-bottom: 8px;
+      font-size: 15px; font-weight: 650; color: #111827;
+      margin-bottom: 8px; letter-spacing: -0.2px;
     }
-
     .card-desc {
-      font-size: 13px;
-      color: #6b7280;
-      line-height: 1.5;
+      font-size: 13px; color: #6b7280;
+      line-height: 1.55;
     }
+    .card-arrow {
+      position: absolute; bottom: 22px; right: 22px;
+      color: #d1d5db; font-size: 14px;
+      transition: color 0.2s, transform 0.2s;
+    }
+    .card:hover .card-arrow { color: #7c3aed; transform: translate(2px, -2px); }
+
+    /* Stats strip */
+    .stats-strip {
+      display: flex; align-items: center; justify-content: center;
+      gap: 40px; margin-bottom: 56px;
+      padding: 20px 0;
+      border-top: 1px solid #e5e7eb;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .stat { text-align: center; }
+    .stat-value { font-size: 28px; font-weight: 800; color: #111827; letter-spacing: -1px; }
+    .stat-value span { background: linear-gradient(135deg,#7c3aed,#6d28d9); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .stat-label { font-size: 12px; color: #9ca3af; margin-top: 3px; }
+    .stat-divider { width: 1px; height: 36px; background: #e5e7eb; }
 
     @media (max-width: 768px) {
-      .cards.three {
-        grid-template-columns: 1fr;
-      }
-      .cards.two {
-        grid-template-columns: 1fr;
-        max-width: 100%;
-      }
-      .hero h1 {
-        font-size: 36px;
-      }
+      .hero h1 { font-size: 42px; letter-spacing: -1.5px; }
+      .cards { grid-template-columns: 1fr; }
+      .stats-strip { gap: 24px; }
+      .stat-divider { display: none; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Nav -->
-  <nav class="nav">
-    <div class="nav-logo">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-      </svg>
-      Metrics
-    </div>
-
-    <div class="nav-tabs">
-      <div class="nav-tab">Overview</div>
-      <div class="nav-tab active">Explorer</div>
-      <div class="nav-tab">Summary</div>
-      <div class="nav-tab">Volume</div>
-      <div class="nav-tab more">···</div>
-    </div>
-
-    <div class="nav-right">
-      <button class="btn-outline">
-        Configure Metrics
-        <span class="chevron">▾</span>
-      </button>
-      <button class="btn-time">1h</button>
-      <button class="btn-tz">
-        <span class="tz-label">UTC-05:00</span>
-        <span class="tz-value">Past 1 Hour <span class="chevron">▾</span></span>
-      </button>
-    </div>
-  </nav>
 
   <!-- Hero -->
   <section class="hero">
-    <h1>Ask. Analyze. Act.</h1>
-    <div class="search-wrap">
-      <span class="search-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-      </span>
-      <input id="heroSearch" type="text" placeholder="Search metrics, tags, or ask a question..." />
-      <button class="btn-ai" onclick="heroSearch()">
-        <span class="sparkle">✦</span> AI
-      </button>
-      <span class="kbd">⌘K</span>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="hero-inner">
+      <div class="hero-eyebrow">
+        <div class="hero-eyebrow-dot"></div>
+        Powered by Bits AI
+      </div>
+
+      <h1>Ask. Analyze.<br><span class="gradient-text">Act on your metrics.</span></h1>
+
+      <p class="hero-sub">Search across 196 metrics, explore trends, catch anomalies, and create monitors — all from one place.</p>
+
+      <div class="search-wrap">
+        <span class="search-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg></span>
+        <input id="heroSearch" type="text" placeholder="Search metrics, tags, or ask a question…" />
+        <button class="btn-ai" onclick="heroSearch()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+          Ask AI
+        </button>
+      </div>
+
+      <div class="search-hints">
+        <span class="hint-label">Try:</span>
+        <span class="hint-chip" onclick="fillAndSearch('show me all checkout metrics')">checkout metrics</span>
+        <span class="hint-chip" onclick="fillAndSearch('system cpu memory')">CPU & memory</span>
+        <span class="hint-chip" onclick="fillAndSearch('show me all metrics')">browse all metrics</span>
+        <span class="hint-chip" onclick="fillAndSearch('azure iot errors')">Azure IoT errors</span>
+      </div>
+    </div>
+
+    <!-- Content inside hero for layout -->
+    <div style="position:relative;z-index:1;width:100%;max-width:1080px;margin-top:64px;padding:0 24px;">
+      <div class="stats-strip">
+        <div class="stat"><div class="stat-value"><span>196</span></div><div class="stat-label">Total Metrics</div></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><div class="stat-value"><span>12</span></div><div class="stat-label">Integrations</div></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><div class="stat-value"><span>99.9%</span></div><div class="stat-label">Uptime</div></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><div class="stat-value"><span>4</span></div><div class="stat-label">Environments</div></div>
+      </div>
+
+      <div class="section-header">
+        <span class="section-label">Quick start</span>
+        <div class="section-line"></div>
+      </div>
+
+      <div class="cards">
+        <a class="card" href="query-result.html">
+          <div class="card-icon" style="background:rgba(124,58,237,0.15);">📈</div>
+          <div class="card-title">Querying</div>
+          <div class="card-desc">Explore checkout failures in prod broken down by availability zone with AI-powered analysis.</div>
+          <div class="card-arrow">↗</div>
+        </a>
+        <a class="card" href="health-monitoring.html">
+          <div class="card-icon" style="background:rgba(16,185,129,0.12);">🩺</div>
+          <div class="card-title">Health Monitoring</div>
+          <div class="card-desc">Surface metrics that monitor platform health — uptime, errors, latency, and system resources.</div>
+          <div class="card-arrow">↗</div>
+        </a>
+        <a class="card" href="cost-optimization.html">
+          <div class="card-icon" style="background:rgba(245,158,11,0.12);">⚡</div>
+          <div class="card-title">Cost Optimization</div>
+          <div class="card-desc">Identify high-volume metrics consuming the most custom metric quota and optimize spend.</div>
+          <div class="card-arrow">↗</div>
+        </a>
+      </div>
     </div>
   </section>
 
@@ -362,37 +328,37 @@
     function heroSearch() {
       const q = document.getElementById('heroSearch').value.trim();
       if (!q) return;
-      // "list" intent → search-results, otherwise → query experience
-      const listIntent = /\b(list|show me all|all metrics|every metric|browse)\b/i.test(q);
-      window.location.href = listIntent
-        ? 'search-results.html?q=' + encodeURIComponent(q)
-        : 'query-result.html?q=' + encodeURIComponent(q);
+      const ql = q.toLowerCase();
+
+      // Volume / cost optimization intent
+      if (/\b(volume|cost|optim|quota|custom metric|expensive|consuming|spend|budget|high.volume|most metric)\b/.test(ql)) {
+        window.location.href = 'cost-optimization.html?q=' + encodeURIComponent(q);
+        return;
+      }
+
+      // Health monitoring intent
+      if (/\b(health|monitor|uptime|platform|slo|availability|status|alert|down|error|failure|latency|show me metric|which metric|surface metric)\b/.test(ql)) {
+        window.location.href = 'health-monitoring.html?q=' + encodeURIComponent(q);
+        return;
+      }
+
+      // Browse / list all intent → search results
+      if (/\b(list|show me all|all metrics|every metric|browse|show me)\b/.test(ql)) {
+        window.location.href = 'search-results.html?q=' + encodeURIComponent(q);
+        return;
+      }
+
+      // Default: querying editor
+      window.location.href = 'query-result.html?q=' + encodeURIComponent(q);
+    }
+    function fillAndSearch(q) {
+      document.getElementById('heroSearch').value = q;
+      heroSearch();
     }
     document.getElementById('heroSearch').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') heroSearch();
     });
   </script>
-
-  <!-- Content -->
-  <main class="content">
-
-    <div class="section-label">Quick start</div>
-    <div class="cards three">
-      <a class="card" href="query-result.html" style="text-decoration:none;color:inherit;">
-        <div class="card-title">Querying</div>
-        <div class="card-desc">What's the max number of failed checkouts in prod, broken down by availability zone?</div>
-      </a>
-      <a class="card" href="health-monitoring.html" style="text-decoration:none;color:inherit;">
-        <div class="card-title">Health Monitoring</div>
-        <div class="card-desc">Show me metrics that monitor the health of my platform</div>
-      </a>
-      <a class="card" href="cost-optimization.html" style="text-decoration:none;color:inherit;">
-        <div class="card-title">Cost Optimization</div>
-        <div class="card-desc">Which metrics are consuming the most volume and should be optimized?</div>
-      </a>
-    </div>
-
-  </main>
 
 </body>
 </html>
