@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metrics Explorer – Search Results</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f8; color: #1a1a2e;
+      height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .nav {
+      display: flex; align-items: center; background: #fff;
+      border-bottom: 1px solid #e5e5ed; padding: 0 24px; height: 52px; flex-shrink: 0;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; color: #1a1a2e; margin-right: 28px; }
+    .nav-logo svg { color: #7c3aed; }
+    .nav-tabs { display: flex; align-items: stretch; height: 100%; flex: 1; }
+    .nav-tab { display: flex; align-items: center; padding: 0 16px; font-size: 14px; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+    .nav-tab:hover { color: #1a1a2e; }
+    .nav-tab.active { color: #7c3aed; border-bottom: 2px solid #7c3aed; font-weight: 500; }
+    .nav-tab.more { font-size: 18px; letter-spacing: 2px; color: #9ca3af; }
+    .nav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+    .btn-outline { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; font-size: 13px; color: #374151; cursor: pointer; white-space: nowrap; }
+    .btn-time { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; font-size: 13px; color: #374151; cursor: pointer; }
+    .btn-tz { display: flex; flex-direction: column; padding: 4px 14px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; cursor: pointer; }
+    .btn-tz .tz-label { font-size: 11px; color: #6b7280; }
+    .btn-tz .tz-value { font-size: 13px; color: #374151; font-weight: 500; }
+
+    .subbar { display: flex; align-items: center; background: #fff; border-bottom: 1px solid #e5e5ed; padding: 0 24px; height: 48px; gap: 12px; flex-shrink: 0; }
+    .back-btn { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #374151; cursor: pointer; text-decoration: none; margin-right: auto; }
+    .back-btn:hover { color: #7c3aed; }
+    .btn-save { padding: 6px 18px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; font-size: 13px; font-weight: 500; color: #374151; cursor: pointer; }
+    .btn-primary { padding: 7px 18px; border: none; border-radius: 6px; background: #7c3aed; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; }
+    .btn-primary:hover { background: #6d28d9; }
+    .legacy-link { font-size: 13px; color: #6b7280; cursor: pointer; white-space: nowrap; }
+
+    .search-bar-wrap { background: #fff; border-bottom: 1px solid #e5e5ed; padding: 10px 24px; flex-shrink: 0; }
+    .search-bar { display: flex; align-items: center; border: 2px solid #7c3aed; border-radius: 8px; padding: 9px 14px; gap: 10px; background: #fff; }
+    .search-bar input { flex: 1; border: none; outline: none; font-size: 14px; color: #374151; background: transparent; }
+    .btn-ai { display: flex; align-items: center; gap: 5px; background: #7c3aed; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    .filters { width: 260px; flex-shrink: 0; background: #fff; border-right: 1px solid #e5e7eb; overflow-y: auto; padding: 16px 0; }
+    .filter-section-header { display: flex; align-items: center; gap: 6px; padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #374151; }
+    .filter-section-header:hover { background: #f9fafb; }
+    .filter-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 16px 7px 36px; cursor: pointer; }
+    .filter-item:hover { background: #f9fafb; }
+    .filter-left { display: flex; align-items: center; gap: 8px; }
+    .checkbox { width: 15px; height: 15px; border: 1.5px solid #7c3aed; border-radius: 3px; background: #7c3aed; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .filter-label { font-size: 13px; color: #374151; }
+    .filter-count { font-size: 12px; color: #9ca3af; }
+
+    .content-panel { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+    .table-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .showing-label { font-size: 13px; color: #6b7280; }
+    .table-actions { display: flex; gap: 8px; }
+    .btn-ai-suggestions { display: flex; align-items: center; gap: 6px; background: #7c3aed; color: #fff; border: none; border-radius: 6px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; position: relative; transition: background 0.15s; }
+    .btn-ai-suggestions:hover { background: #6d28d9; }
+    .btn-export { padding: 7px 14px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; font-size: 13px; color: #374151; cursor: pointer; }
+    .btn-export:hover { background: #f9fafb; }
+
+    /* AI Suggestions dropdown */
+    .ai-dd-wrap { position: relative; }
+    .ai-dd { position: absolute; top: calc(100% + 6px); right: 0; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 300; min-width: 220px; padding: 6px; display: none; }
+    .ai-dd.open { display: block; animation: ddIn 0.15s ease; }
+    @keyframes ddIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+    .ai-dd-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 7px; cursor: pointer; font-size: 13px; color: #374151; transition: background 0.1s; }
+    .ai-dd-item:hover { background: #f3f0ff; color: #7c3aed; }
+    .ai-dd-item .dd-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .ai-dd-item .dd-label { font-weight: 500; }
+    .ai-dd-item .dd-sub { font-size: 11px; color: #9ca3af; margin-top: 1px; }
+    .ai-dd-sep { height: 1px; background: #f3f4f6; margin: 4px 0; }
+
+    /* Dashboard modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 500; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
+    .modal-overlay.hidden { display: none; }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    .modal { background: #fff; border-radius: 14px; width: 640px; max-width: 95vw; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: modalIn 0.2s cubic-bezier(0.34,1.4,0.64,1); }
+    @keyframes modalIn { from { opacity:0; transform:scale(0.94) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+    .modal-header { display: flex; align-items: center; padding: 20px 24px 16px; border-bottom: 1px solid #f3f4f6; gap: 12px; }
+    .modal-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .modal-title { font-size: 16px; font-weight: 700; color: #111827; }
+    .modal-subtitle { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+    .modal-close { margin-left: auto; cursor: pointer; color: #9ca3af; font-size: 20px; line-height: 1; padding: 4px 6px; border-radius: 5px; }
+    .modal-close:hover { background: #f3f4f6; color: #374151; }
+    .modal-body { overflow-y: auto; padding: 20px 24px; flex: 1; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid #f3f4f6; display: flex; gap: 10px; justify-content: flex-end; }
+    .modal-btn-primary { display: flex; align-items: center; gap: 6px; background: #7c3aed; color: #fff; border: none; border-radius: 7px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; transition: background 0.15s; }
+    .modal-btn-primary:hover { background: #6d28d9; }
+    .modal-btn-secondary { background: #fff; color: #374151; border: 1px solid #d1d5db; border-radius: 7px; padding: 9px 18px; font-size: 13px; cursor: pointer; }
+    .modal-btn-secondary:hover { background: #f9fafb; }
+
+    /* Dashboard preview widgets */
+    .dash-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .dash-badge { background: #ede9fe; color: #7c3aed; border-radius: 5px; padding: 3px 10px; font-size: 11px; font-weight: 700; }
+    .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .dash-widget { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 16px; }
+    .dash-widget-title { font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+    .dash-widget-metric { font-family: "SF Mono","Fira Code",monospace; font-size: 11px; color: #7c3aed; background: #ede9fe; border-radius: 4px; padding: 2px 7px; display: inline-block; margin-bottom: 8px; }
+    .dash-widget-type { font-size: 11px; color: #9ca3af; }
+    .dash-widget-preview { height: 40px; margin-top: 8px; border-radius: 5px; background: linear-gradient(90deg, #ede9fe 0%, #c4b5fd 40%, #7c3aed 70%, #5b21b6 100%); opacity: 0.35; }
+    .dash-widget-preview.green { background: linear-gradient(90deg, #d1fae5 0%, #6ee7b7 40%, #10b981 70%, #065f46 100%); }
+    .dash-widget-preview.red { background: linear-gradient(90deg, #fee2e2 0%, #fca5a5 40%, #ef4444 70%, #991b1b 100%); }
+    .dash-widget-preview.blue { background: linear-gradient(90deg, #dbeafe 0%, #93c5fd 40%, #3b82f6 70%, #1e3a8a 100%); }
+    .dash-widget-preview.yellow { background: linear-gradient(90deg, #fef3c7 0%, #fcd34d 40%, #f59e0b 70%, #92400e 100%); }
+
+    .metrics-table { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+    th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 600; color: #6b7280; letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; }
+    td { padding: 12px 16px; font-size: 13px; color: #374151; border-bottom: 1px solid #f3f4f6; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #faf9ff; }
+    .metric-name { font-family: "SF Mono", "Fira Code", monospace; font-size: 12.5px; color: #111827; }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+    .badge-gauge     { background: #ede9fe; color: #7c3aed; }
+    .badge-count     { background: #d1fae5; color: #065f46; }
+    .badge-histogram { background: #fef3c7; color: #92400e; }
+    .badge-rate      { background: #fee2e2; color: #991b1b; }
+    .badge-distribution { background: #dbeafe; color: #1e40af; }
+    .badge-increment { background: #d1fae5; color: #065f46; }
+
+    .tags-cell { font-size: 12px; color: #6b7280; max-width: 360px; }
+    .last-seen { font-size: 13px; color: #6b7280; white-space: nowrap; }
+
+    .no-results { text-align: center; padding: 60px 24px; color: #6b7280; font-size: 14px; }
+    .no-results h3 { color: #374151; font-size: 16px; margin-bottom: 8px; }
+
+    .help-btn { position: fixed; bottom: 24px; right: 24px; width: 36px; height: 36px; border-radius: 50%; background: #fff; border: 1px solid #d1d5db; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #6b7280; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+    mark { background: #ede9fe; color: #6d28d9; border-radius: 2px; padding: 0 1px; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Nav -->
+  <nav class="nav">
+    <div class="nav-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Metrics
+    </div>
+    <div class="nav-tabs">
+      <div class="nav-tab">Overview</div>
+      <div class="nav-tab active">Explorer</div>
+      <div class="nav-tab">Summary</div>
+      <div class="nav-tab">Volume</div>
+      <div class="nav-tab more">···</div>
+    </div>
+    <div class="nav-right">
+      <button class="btn-outline">Configure Metrics ▾</button>
+      <button class="btn-time">1h</button>
+      <button class="btn-tz">
+        <span class="tz-label">UTC-05:00</span>
+        <span class="tz-value">Past 1 Hour ▾</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Sub Bar -->
+  <div class="subbar">
+    <a class="back-btn" href="metrics-explorer.html">← Back to search</a>
+    <button class="btn-outline">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Last 24h ▾
+    </button>
+    <button class="btn-save">Save</button>
+    <button class="btn-primary">Create Monitor</button>
+    <span class="legacy-link">Show legacy experience</span>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-bar-wrap">
+    <div class="search-bar">
+      <span style="color:#9ca3af;flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <input id="searchInput" type="text" placeholder="Search metrics, tags, or ask a question..." />
+      <button class="btn-ai" onclick="runSearch()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+        AI
+      </button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Filters -->
+    <aside class="filters">
+      <div>
+        <div class="filter-section-header">▼ Configuration</div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">All tags</span>
+          </div><span class="filter-count">4.44K</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Configured tags</span>
+          </div><span class="filter-count">5</span>
+        </div>
+      </div>
+      <div>
+        <div class="filter-section-header">▼ Percentiles</div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Enabled percentiles</span>
+          </div><span class="filter-count">476</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Disabled percentiles</span>
+          </div><span class="filter-count">418</span>
+        </div>
+      </div>
+      <div>
+        <div class="filter-section-header">▼ Historical Metrics</div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Enabled historical metrics</span>
+          </div><span class="filter-count">2</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Disabled historical metrics</span>
+          </div><span class="filter-count">18.9K</span>
+        </div>
+      </div>
+      <div>
+        <div class="filter-section-header">▼ Query Activity</div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Queried in 30 days</span>
+          </div><span class="filter-count">9.83K</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Not queried in 30 days</span>
+          </div><span class="filter-count">5.97K</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Not queried in 60 days</span>
+          </div><span class="filter-count">5.01K</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Not queried in 90 days</span>
+          </div><span class="filter-count">4.27K</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Not queried in 120 days</span>
+          </div><span class="filter-count">3.52K</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Not queried in 150 days</span>
+          </div><span class="filter-count">2.66K</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Content -->
+    <div class="content-panel">
+      <div class="table-header">
+        <span class="showing-label" id="showingLabel">Showing all metrics</span>
+        <div class="table-actions">
+          <div class="ai-dd-wrap">
+            <button class="btn-ai-suggestions" id="aiSugBtn" onclick="toggleAiDd(event)">✦ AI Suggestions ▾</button>
+            <div class="ai-dd" id="aiDd">
+              <div class="ai-dd-item" onclick="aiAction('dashboard')">
+                <div class="dd-icon" style="background:#ede9fe;">📊</div>
+                <div><div class="dd-label">Create Dashboard</div><div class="dd-sub">AI-suggested widgets for these metrics</div></div>
+              </div>
+              <div class="ai-dd-item" onclick="aiAction('notebook')">
+                <div class="dd-icon" style="background:#dbeafe;">📓</div>
+                <div><div class="dd-label">Create Notebook</div><div class="dd-sub">Investigation notebook with context</div></div>
+              </div>
+              <div class="ai-dd-item" onclick="aiAction('monitor')">
+                <div class="dd-icon" style="background:#fee2e2;">🔔</div>
+                <div><div class="dd-label">Create Monitor</div><div class="dd-sub">Alert on the top metric</div></div>
+              </div>
+              <div class="ai-dd-sep"></div>
+              <div class="ai-dd-item" onclick="aiAction('explore')">
+                <div class="dd-icon" style="background:#d1fae5;">🔍</div>
+                <div><div class="dd-label">Explore in Metrics Explorer</div><div class="dd-sub">Deep-dive into aggregations & breakdowns</div></div>
+              </div>
+            </div>
+          </div>
+          <button class="btn-export">Export as CSV</button>
+        </div>
+      </div>
+      <div class="metrics-table">
+        <table>
+          <thead>
+            <tr>
+              <th>↕ METRIC NAME</th>
+              <th>TYPE</th>
+              <th>LAST SEEN</th>
+              <th>TAGS</th>
+            </tr>
+          </thead>
+          <tbody id="metricsBody"></tbody>
+        </table>
+        <div id="noResults" class="no-results" style="display:none;">
+          <h3>No metrics found</h3>
+          <p>Try a different search term, e.g. "cpu", "checkout", "azure", or "show me all metrics"</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="help-btn">?</div>
+
+  <!-- Dashboard / AI modal -->
+  <div class="modal-overlay hidden" id="aiModal" onclick="closeModal(event)">
+    <div class="modal" id="aiModalInner">
+      <div class="modal-header">
+        <div class="modal-icon" id="aiModalIcon"></div>
+        <div>
+          <div class="modal-title" id="aiModalTitle"></div>
+          <div class="modal-subtitle" id="aiModalSubtitle"></div>
+        </div>
+        <span class="modal-close" onclick="closeModal(null, true)">✕</span>
+      </div>
+      <div class="modal-body" id="aiModalBody"></div>
+      <div class="modal-footer" id="aiModalFooter"></div>
+    </div>
+  </div>
+
+  <script>
+    // ── Full Shopist Metrics Catalog ──────────────────────────────────────
+    const METRICS = [
+      // Shopist Custom
+      { name: 'shopist.user.login_attempt.failure_count', type: 'count',        tags: 'user_ip_address, user_id',                        lastSeen: '10 seconds ago', cats: ['shopist','login','user','auth','security','failure'] },
+      { name: 'shopist.user.login_attempt.success_count', type: 'count',        tags: 'user_ip_address, user_id',                        lastSeen: '10 seconds ago', cats: ['shopist','login','user','auth','security','success'] },
+      { name: 'shopist.web.up',                           type: 'gauge',        tags: 'env:prod',                                        lastSeen: '30 seconds ago', cats: ['shopist','health','uptime','monitor','web'] },
+      { name: 'shopist.synthesizer.errors',               type: 'distribution', tags: 'env:prod',                                        lastSeen: '30 seconds ago', cats: ['shopist','error','synthesizer'] },
+      { name: 'shopist.scenarios.checkout.failures',      type: 'rate',         tags: 'env:prod',                                        lastSeen: '1 minute ago',   cats: ['shopist','checkout','failure','error','cart','purchase'] },
+
+      // Funnel & APM
+      { name: 'shopist.funnel.pct_carts_abandoned',        type: 'gauge', tags: 'env:prod',                lastSeen: '1 minute ago',   cats: ['shopist','funnel','cart','checkout','purchase'] },
+      { name: 'shopist.funnel.avg_time_to_checkout',       type: 'gauge', tags: 'env:prod',                lastSeen: '1 minute ago',   cats: ['shopist','funnel','checkout','latency','purchase'] },
+      { name: 'shopist.memcache.get_hits_rate',            type: 'gauge', tags: 'env:prod',                lastSeen: '2 minutes ago',  cats: ['shopist','memcache','cache','performance'] },
+      { name: 'shopist.memcache.get_misses_rate',          type: 'gauge', tags: 'env:prod',                lastSeen: '2 minutes ago',  cats: ['shopist','memcache','cache','performance'] },
+      { name: 'shopist.memcache.curr_items',               type: 'gauge', tags: 'env:prod',                lastSeen: '2 minutes ago',  cats: ['shopist','memcache','cache'] },
+      { name: 'shopist.memcache.cmd_set_rate',             type: 'gauge', tags: 'env:prod',                lastSeen: '2 minutes ago',  cats: ['shopist','memcache','cache'] },
+      { name: 'shopist.memcache.bytes_written_rate',       type: 'gauge', tags: 'env:prod',                lastSeen: '2 minutes ago',  cats: ['shopist','memcache','cache','network'] },
+      { name: 'shopist.trace.rack.request.errors',         type: 'gauge', tags: 'env:prod',                lastSeen: '1 minute ago',   cats: ['shopist','trace','error','request','apm'] },
+      { name: 'shopist.trace.rack.request.latency.50p',   type: 'gauge', tags: 'env:prod',                lastSeen: '1 minute ago',   cats: ['shopist','trace','latency','request','apm','performance'] },
+      { name: 'shopist.trace.mongo.query.latency.50p',    type: 'gauge', tags: 'env:prod',                lastSeen: '1 minute ago',   cats: ['shopist','trace','mongo','latency','database','apm'] },
+      { name: 'shopist.trace.mongo.query.hits',           type: 'gauge', tags: 'env:prod',                lastSeen: '1 minute ago',   cats: ['shopist','trace','mongo','database','apm'] },
+      { name: 'trace.rack.request.duration',              type: 'gauge', tags: 'env:prod, service:web-store',     lastSeen: '1 minute ago',   cats: ['trace','latency','request','apm','performance'] },
+      { name: 'trace.rack.request.duration.by.service.50p', type: 'gauge', tags: 'env:prod, service:web-store', lastSeen: '1 minute ago', cats: ['trace','latency','percentile','apm','performance'] },
+      { name: 'trace.rack.request.duration.by.service.95p', type: 'gauge', tags: 'env:prod, service:web-store', lastSeen: '1 minute ago', cats: ['trace','latency','percentile','apm','performance'] },
+      { name: 'trace.rack.request.duration.by.service.99p', type: 'gauge', tags: 'env:prod, service:web-store', lastSeen: '1 minute ago', cats: ['trace','latency','percentile','apm','performance'] },
+      { name: 'trace.mongo.cmd.duration',                 type: 'gauge', tags: 'env:prod, service:web-store-mongo', lastSeen: '1 minute ago', cats: ['trace','mongo','latency','database','apm'] },
+      { name: 'synth.funnel.sales_completed',             type: 'gauge', tags: 'env:prod',                lastSeen: '30 seconds ago', cats: ['shopist','funnel','sales','purchase'] },
+
+      // MongoDB
+      { name: 'mongodb.opcounters.queryps',               type: 'gauge', tags: 'env:prod, cluster-name:prod-gke-shopist-a-us-west1', lastSeen: '1 minute ago', cats: ['mongodb','database','query','performance'] },
+      { name: 'mongodb.globallock.activeclients.readers', type: 'gauge', tags: 'env:prod, cluster-name:prod-gke-shopist-a-us-west1', lastSeen: '1 minute ago', cats: ['mongodb','database','lock','performance'] },
+      { name: 'mongodb.metrics.cursor.open.total',        type: 'gauge', tags: 'env:prod, cluster-name:prod-gke-shopist-a-us-west1', lastSeen: '1 minute ago', cats: ['mongodb','database','cursor'] },
+      { name: 'mongodb.globallock.currentqueue.readers',  type: 'gauge', tags: 'env:prod, cluster-name:prod-gke-shopist-a-us-west1', lastSeen: '2 minutes ago', cats: ['mongodb','database','lock','queue'] },
+      { name: 'mongodb.mem.virtual',                      type: 'gauge', tags: 'env:prod, cluster-name:prod-gke-shopist-a-us-west1', lastSeen: '2 minutes ago', cats: ['mongodb','database','memory'] },
+      { name: 'mongodb.connections.current',              type: 'gauge', tags: 'env:prod, cluster-name:prod-gke-shopist-a-us-west1', lastSeen: '1 minute ago', cats: ['mongodb','database','connection','health'] },
+      { name: 'shopist.mongodb.usage.total.countps',      type: 'gauge', tags: 'env:prod',                lastSeen: '2 minutes ago',  cats: ['shopist','mongodb','database'] },
+      { name: 'shopist.mongodb.usage.queries.time',       type: 'gauge', tags: 'env:prod',                lastSeen: '2 minutes ago',  cats: ['shopist','mongodb','database','latency'] },
+      { name: 'shopist.mongodb.network.bytesoutps',       type: 'gauge', tags: 'env:prod',                lastSeen: '2 minutes ago',  cats: ['shopist','mongodb','database','network'] },
+      { name: 'mongo.collections.cart_items.size',        type: 'gauge', tags: 'env:prod',                lastSeen: '3 minutes ago',  cats: ['mongo','database','cart','collection'] },
+      { name: 'mongo.collections.products.size',          type: 'gauge', tags: 'env:prod',                lastSeen: '3 minutes ago',  cats: ['mongo','database','product','collection'] },
+      { name: 'mongo.collections.customers.size',         type: 'gauge', tags: 'env:prod',                lastSeen: '3 minutes ago',  cats: ['mongo','database','customer','collection'] },
+      { name: 'mongo.collections.carts.size',             type: 'gauge', tags: 'env:prod',                lastSeen: '3 minutes ago',  cats: ['mongo','database','cart','checkout','collection'] },
+      { name: 'mongo.collections.checkouts.size',         type: 'gauge', tags: 'env:prod',                lastSeen: '3 minutes ago',  cats: ['mongo','database','checkout','collection'] },
+      { name: 'mongo.collections.merchants.size',         type: 'gauge', tags: 'env:prod',                lastSeen: '3 minutes ago',  cats: ['mongo','database','merchant','collection'] },
+
+      // IoT Agent
+      { name: 'datadog.agent.running',        type: 'gauge', tags: 'type:iot, version:7.16.1, python_version:3', lastSeen: '1 minute ago',  cats: ['agent','iot','health','monitor','datadog'] },
+      { name: 'datadog.agent.started',        type: 'gauge', tags: 'type:iot, version:7.16.1',                  lastSeen: '5 minutes ago',  cats: ['agent','iot','datadog'] },
+      { name: 'datadog.agent.python.version', type: 'gauge', tags: 'type:iot, python_version:3',                lastSeen: '5 minutes ago',  cats: ['agent','iot','datadog'] },
+
+      // System CPU
+      { name: 'system.cpu.user',    type: 'gauge', tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '2 minutes ago', cats: ['system','cpu','iot','health','monitor','performance'] },
+      { name: 'system.cpu.system',  type: 'gauge', tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '2 minutes ago', cats: ['system','cpu','iot','health','performance'] },
+      { name: 'system.cpu.idle',    type: 'gauge', tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '2 minutes ago', cats: ['system','cpu','iot','health','performance'] },
+      { name: 'system.cpu.iowait',  type: 'gauge', tags: 'type:iot, availability-zone:us-east1-c', lastSeen: '2 minutes ago', cats: ['system','cpu','io','iot','health','performance'] },
+      { name: 'system.load.1',      type: 'gauge', tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '2 minutes ago', cats: ['system','cpu','load','iot','health','performance'] },
+
+      // System Memory
+      { name: 'system.mem.total',   type: 'gauge', tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '2 minutes ago', cats: ['system','memory','mem','iot','health'] },
+      { name: 'system.mem.usable',  type: 'gauge', tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '2 minutes ago', cats: ['system','memory','mem','iot','health','monitor'] },
+      { name: 'system.swap.free',   type: 'gauge', tags: 'type:iot, availability-zone:us-east1-c', lastSeen: '2 minutes ago', cats: ['system','memory','swap','iot','health'] },
+      { name: 'system.swap.used',   type: 'gauge', tags: 'type:iot, availability-zone:us-east1-c', lastSeen: '2 minutes ago', cats: ['system','memory','swap','iot','health'] },
+
+      // System Disk
+      { name: 'system.disk.total',  type: 'gauge', tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '3 minutes ago', cats: ['system','disk','storage','iot','health'] },
+      { name: 'system.disk.free',   type: 'gauge', tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '3 minutes ago', cats: ['system','disk','storage','iot','health'] },
+      { name: 'system.disk.in_use', type: 'gauge', tags: 'type:iot, availability-zone:us-east1-c', lastSeen: '3 minutes ago', cats: ['system','disk','storage','iot','health','monitor'] },
+      { name: 'system.io.await',    type: 'gauge', tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '3 minutes ago', cats: ['system','disk','io','iot','performance'] },
+
+      // System Network
+      { name: 'system.net.bytes_rcvd', type: 'gauge', tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '2 minutes ago', cats: ['system','network','net','bytes','iot','health'] },
+      { name: 'system.net.bytes_sent', type: 'gauge', tags: 'type:iot, availability-zone:us-east1-c', lastSeen: '2 minutes ago', cats: ['system','network','net','bytes','iot','health'] },
+
+      // IoT Device Sensors
+      { name: 'device.target_temperature',  type: 'gauge', tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '30 seconds ago', cats: ['device','iot','temperature','sensor'] },
+      { name: 'device.actual_temperature',  type: 'gauge', tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '30 seconds ago', cats: ['device','iot','temperature','sensor'] },
+      { name: 'device.cpu_temperature',     type: 'gauge', tags: 'type:iot, availability-zone:us-east1-c', lastSeen: '30 seconds ago', cats: ['device','iot','temperature','cpu','sensor'] },
+      { name: 'device.flow_rate',           type: 'gauge', tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '30 seconds ago', cats: ['device','iot','flow','sensor'] },
+      { name: 'device.wlan_signal_dbm',     type: 'gauge', tags: 'type:iot, availability-zone:us-east1-c', lastSeen: '1 minute ago',   cats: ['device','iot','wifi','network','signal','sensor'] },
+      { name: 'device.tank_pressure',       type: 'gauge', tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '30 seconds ago', cats: ['device','iot','pressure','sensor'] },
+      { name: 'device.tank_temperature',    type: 'gauge', tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '30 seconds ago', cats: ['device','iot','temperature','sensor'] },
+      { name: 'device.product_sales',       type: 'gauge', tags: 'type:iot, availability-zone:us-east1-c', lastSeen: '1 minute ago',   cats: ['device','iot','sales','purchase'] },
+
+      // Azure IoT Hub
+      { name: 'azure.devices_iothubs.devices.connected_devices.all_protocol',     type: 'gauge', tags: 'region:eastus',  lastSeen: '2 minutes ago', cats: ['azure','iot','device','connected','cloud'] },
+      { name: 'azure.devices_iothubs.devices.total_devices',                      type: 'gauge', tags: 'region:westus',  lastSeen: '2 minutes ago', cats: ['azure','iot','device','cloud'] },
+      { name: 'azure.devices_iothubs.d2c.twin.read.failure',                      type: 'gauge', tags: 'region:eastus',  lastSeen: '3 minutes ago', cats: ['azure','iot','twin','failure','error','cloud'] },
+      { name: 'azure.devices_iothubs.d2c.twin.read.success',                      type: 'gauge', tags: 'region:eastus',  lastSeen: '3 minutes ago', cats: ['azure','iot','twin','success','cloud'] },
+      { name: 'azure.devices_iothubs.d2c.twin.update.failure',                    type: 'gauge', tags: 'region:westus',  lastSeen: '3 minutes ago', cats: ['azure','iot','twin','failure','error','cloud'] },
+      { name: 'azure.devices_iothubs.d2c.twin.update.success',                    type: 'gauge', tags: 'region:westus',  lastSeen: '3 minutes ago', cats: ['azure','iot','twin','success','cloud'] },
+      { name: 'azure.devices_iothubs.d2c.twin.queries.failure',                   type: 'gauge', tags: 'region:eastus',  lastSeen: '3 minutes ago', cats: ['azure','iot','twin','failure','error','cloud'] },
+      { name: 'azure.devices_iothubs.d2c.twin.queries.success',                   type: 'gauge', tags: 'region:eastus',  lastSeen: '3 minutes ago', cats: ['azure','iot','twin','success','cloud'] },
+      { name: 'azure.devices_iothubs.c2d.twin.read.failure',                      type: 'gauge', tags: 'region:westus',  lastSeen: '3 minutes ago', cats: ['azure','iot','twin','failure','error','cloud'] },
+      { name: 'azure.devices_iothubs.c2d.twin.read.success',                      type: 'gauge', tags: 'region:westus',  lastSeen: '3 minutes ago', cats: ['azure','iot','twin','success','cloud'] },
+      { name: 'azure.devices_iothubs.c2d.twin.update.failure',                    type: 'gauge', tags: 'region:eastus',  lastSeen: '3 minutes ago', cats: ['azure','iot','twin','failure','error','cloud'] },
+      { name: 'azure.devices_iothubs.c2d.twin.update.success',                    type: 'gauge', tags: 'region:eastus',  lastSeen: '3 minutes ago', cats: ['azure','iot','twin','success','cloud'] },
+      { name: 'azure.devices_iothubs.d2c.telemetry.egress.dropped',               type: 'gauge', tags: 'region:eastus',  lastSeen: '2 minutes ago', cats: ['azure','iot','telemetry','dropped','error','cloud'] },
+      { name: 'azure.devices_iothubs.d2c.telemetry.egress.fallback',              type: 'gauge', tags: 'region:eastus',  lastSeen: '2 minutes ago', cats: ['azure','iot','telemetry','cloud'] },
+      { name: 'azure.devices_iothubs.d2c.telemetry.egress.invalid',               type: 'gauge', tags: 'region:eastus',  lastSeen: '2 minutes ago', cats: ['azure','iot','telemetry','error','cloud'] },
+      { name: 'azure.devices_iothubs.d2c.telemetry.egress.orphaned',              type: 'gauge', tags: 'region:eastus',  lastSeen: '2 minutes ago', cats: ['azure','iot','telemetry','cloud'] },
+      { name: 'azure.devices_iothubs.d2c.telemetry.egress.success',               type: 'gauge', tags: 'region:eastus',  lastSeen: '2 minutes ago', cats: ['azure','iot','telemetry','success','cloud'] },
+      { name: 'azure.devices_iothubs.d2c.telemetry.ingress.success',              type: 'gauge', tags: 'region:westus',  lastSeen: '2 minutes ago', cats: ['azure','iot','telemetry','success','cloud'] },
+      { name: 'azure.devices_iothubs.d2c.telemetry.ingress.all_protocol',         type: 'gauge', tags: 'region:westus',  lastSeen: '2 minutes ago', cats: ['azure','iot','telemetry','cloud'] },
+      { name: 'azure.devices_iothubs.c2d.commands.egress.complete.success',       type: 'gauge', tags: 'region:eastus',  lastSeen: '4 minutes ago', cats: ['azure','iot','command','success','cloud'] },
+      { name: 'azure.devices_iothubs.c2d.commands.egress.reject.success',         type: 'gauge', tags: 'region:westus',  lastSeen: '4 minutes ago', cats: ['azure','iot','command','cloud'] },
+      { name: 'azure.devices_iothubs.c2d.commands.egress.abandon.success',        type: 'gauge', tags: 'region:eastus',  lastSeen: '4 minutes ago', cats: ['azure','iot','command','cloud'] },
+
+      // Azure DevOps
+      { name: 'azure.devops.event.count',       type: 'gauge', tags: 'project_id, azure_org_name, event_type', lastSeen: '2 minutes ago', cats: ['azure','devops','event','ci','build'] },
+      { name: 'azure.devops.work_item.duration', type: 'gauge', tags: 'project_id, azure_org_name',            lastSeen: '5 minutes ago', cats: ['azure','devops','work_item','ci'] },
+      { name: 'azure.devops.build.duration',     type: 'gauge', tags: 'project_id, azure_org_name',            lastSeen: '5 minutes ago', cats: ['azure','devops','build','ci','deploy'] },
+
+      // AWS EC2
+      { name: 'aws.ec2.status_check_failed_system',   type: 'gauge', tags: 'env:prod, region:us-west1', lastSeen: '2 minutes ago', cats: ['aws','ec2','status','health','monitor','failure'] },
+      { name: 'aws.ec2.status_check_failed_instance', type: 'gauge', tags: 'env:prod, region:us-west1', lastSeen: '2 minutes ago', cats: ['aws','ec2','status','health','monitor','failure'] },
+      { name: 'aws.ec2.cpuutilization',               type: 'gauge', tags: 'env:prod, region:us-west1', lastSeen: '2 minutes ago', cats: ['aws','ec2','cpu','performance','health'] },
+      { name: 'aws.ec2.network_out',                  type: 'gauge', tags: 'env:prod, region:us-west1', lastSeen: '2 minutes ago', cats: ['aws','ec2','network','bytes'] },
+
+      // AWS IoT
+      { name: 'aws.iot.connect_success',            type: 'gauge', tags: 'env:prod', lastSeen: '1 minute ago',  cats: ['aws','iot','connect','success'] },
+      { name: 'aws.iot.connect_auth_error',         type: 'gauge', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['aws','iot','connect','error','failure','auth','security'] },
+      { name: 'aws.iot.connect_client_error',       type: 'gauge', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['aws','iot','connect','error','failure'] },
+      { name: 'aws.iot.connect_server_error',       type: 'gauge', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['aws','iot','connect','error','failure'] },
+      { name: 'aws.iot.subscribe_success',          type: 'gauge', tags: 'env:prod', lastSeen: '1 minute ago',  cats: ['aws','iot','subscribe','success'] },
+      { name: 'aws.iot.subscribe_auth_error',       type: 'gauge', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['aws','iot','subscribe','error','failure','auth','security'] },
+      { name: 'aws.iot.subscribe_client_error',     type: 'gauge', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['aws','iot','subscribe','error','failure'] },
+      { name: 'aws.iot.subscribe_server_error',     type: 'gauge', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['aws','iot','subscribe','error','failure'] },
+      { name: 'aws.iot.subscribe_throttle',         type: 'gauge', tags: 'env:prod', lastSeen: '3 minutes ago', cats: ['aws','iot','subscribe','throttle'] },
+      { name: 'aws.iot.publishin_success',          type: 'gauge', tags: 'env:prod', lastSeen: '1 minute ago',  cats: ['aws','iot','publish','success'] },
+      { name: 'aws.iot.publishin_auth_error',       type: 'gauge', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['aws','iot','publish','error','failure','auth','security'] },
+      { name: 'aws.iot.publishin_client_error',     type: 'gauge', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['aws','iot','publish','error','failure'] },
+      { name: 'aws.iot.publishin_server_error',     type: 'gauge', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['aws','iot','publish','error','failure'] },
+      { name: 'aws.iot.publishin_throttle',         type: 'gauge', tags: 'env:prod', lastSeen: '3 minutes ago', cats: ['aws','iot','publish','throttle'] },
+      { name: 'aws.iot.publishout_success',         type: 'gauge', tags: 'env:prod', lastSeen: '1 minute ago',  cats: ['aws','iot','publish','success'] },
+      { name: 'aws.iot.publishout_auth_error',      type: 'gauge', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['aws','iot','publish','error','failure','auth','security'] },
+      { name: 'aws.iot.publishout_client_error',    type: 'gauge', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['aws','iot','publish','error','failure'] },
+      { name: 'aws.iot.publishout_server_error',    type: 'gauge', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['aws','iot','publish','error','failure'] },
+      { name: 'aws.iot.publishout_throttle',        type: 'gauge', tags: 'env:prod', lastSeen: '3 minutes ago', cats: ['aws','iot','publish','throttle'] },
+      { name: 'aws.iot.updatethingshadow_accepted', type: 'gauge', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['aws','iot','shadow'] },
+      { name: 'aws.iot.getthingshadow_accepted',    type: 'gauge', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['aws','iot','shadow'] },
+      { name: 'aws.iot.deletethingshadow_accepted', type: 'gauge', tags: 'env:prod', lastSeen: '5 minutes ago', cats: ['aws','iot','shadow'] },
+
+      // SNMP
+      { name: 'snmp.udpHCInDatagrams',       type: 'gauge', tags: 'env:prod, device', lastSeen: '2 minutes ago', cats: ['snmp','network','udp','datagram'] },
+      { name: 'snmp.udpHCOutDatagrams',      type: 'gauge', tags: 'env:prod, device', lastSeen: '2 minutes ago', cats: ['snmp','network','udp','datagram'] },
+      { name: 'snmp.tcpHCInSegs',            type: 'gauge', tags: 'env:prod, device', lastSeen: '2 minutes ago', cats: ['snmp','network','tcp'] },
+      { name: 'snmp.tcpHCOutSegs',           type: 'gauge', tags: 'env:prod, device', lastSeen: '2 minutes ago', cats: ['snmp','network','tcp'] },
+      { name: 'snmp.tcpActiveOpens',         type: 'gauge', tags: 'env:prod, device', lastSeen: '3 minutes ago', cats: ['snmp','network','tcp','connection'] },
+      { name: 'snmp.tcpEstabResets',         type: 'gauge', tags: 'env:prod, device', lastSeen: '3 minutes ago', cats: ['snmp','network','tcp','error'] },
+      { name: 'snmp.ifHCInOctets.rate',      type: 'gauge', tags: 'env:prod, device', lastSeen: '2 minutes ago', cats: ['snmp','network','interface','bytes'] },
+      { name: 'snmp.ifHCOutOctets.rate',     type: 'gauge', tags: 'env:prod, device', lastSeen: '2 minutes ago', cats: ['snmp','network','interface','bytes'] },
+      { name: 'snmp.ifHighSpeed',            type: 'gauge', tags: 'env:prod, device', lastSeen: '5 minutes ago', cats: ['snmp','network','interface','speed'] },
+      { name: 'snmp.ifHCInBroadcastPkts',   type: 'gauge', tags: 'env:prod, device', lastSeen: '2 minutes ago', cats: ['snmp','network','interface','packet'] },
+      { name: 'snmp.ifHCOutMulticastPkts',  type: 'gauge', tags: 'env:prod, device', lastSeen: '2 minutes ago', cats: ['snmp','network','interface','packet'] },
+      { name: 'snmp.ifHCInOctets',          type: 'gauge', tags: 'env:prod, device', lastSeen: '2 minutes ago', cats: ['snmp','network','interface','bytes'] },
+      { name: 'snmp.ifHCOutOctets',         type: 'gauge', tags: 'env:prod, device', lastSeen: '2 minutes ago', cats: ['snmp','network','interface','bytes'] },
+
+      // Cloud Foundry
+      { name: 'cloudfoundry.nozzle.cc.job_queue_length.total',                          type: 'gauge', tags: 'deployment:cf-272bc51462f5eda69492', lastSeen: '2 minutes ago', cats: ['cloudfoundry','cf','queue','job'] },
+      { name: 'cloudfoundry.nozzle.DopplerServer.TruncatingBuffer.totalDroppedMessages', type: 'gauge', tags: 'deployment:cf-272bc51462f5eda69492', lastSeen: '2 minutes ago', cats: ['cloudfoundry','cf','dropped','error'] },
+      { name: 'cloudfoundry.nozzle.etcd.Watchers',                                      type: 'gauge', tags: 'deployment:cf-272bc51462f5eda69492', lastSeen: '2 minutes ago', cats: ['cloudfoundry','cf','etcd'] },
+      { name: 'cloudfoundry.nozzle.slowConsumerAlert',                                   type: 'gauge', tags: 'deployment:cf-272bc51462f5eda69492', lastSeen: '2 minutes ago', cats: ['cloudfoundry','cf','alert','slow','health'] },
+      { name: 'cloudfoundry.nozzle.RequestLatency',                                      type: 'gauge', tags: 'deployment:cf-272bc51462f5eda69492', lastSeen: '2 minutes ago', cats: ['cloudfoundry','cf','latency','performance'] },
+      { name: 'cloudfoundry.nozzle.AuctioneerFetchStatesDuration',                       type: 'gauge', tags: 'deployment:cf-272bc51462f5eda69492', lastSeen: '3 minutes ago', cats: ['cloudfoundry','cf','latency','performance'] },
+      { name: 'cloudfoundry.nozzle.UnhealthyCell',                                       type: 'gauge', tags: 'deployment:cf-272bc51462f5eda69492', lastSeen: '2 minutes ago', cats: ['cloudfoundry','cf','health','monitor','unhealthy'] },
+      { name: 'cloudfoundry.nozzle.AuctioneerLRPAuctionsFailed',                         type: 'gauge', tags: 'deployment:cf-272bc51462f5eda69492', lastSeen: '2 minutes ago', cats: ['cloudfoundry','cf','failure','error'] },
+      { name: 'cloudfoundry.nozzle.AuctioneerLRPAuctionsStarted',                        type: 'gauge', tags: 'deployment:cf-272bc51462f5eda69492', lastSeen: '2 minutes ago', cats: ['cloudfoundry','cf'] },
+      { name: 'cloudfoundry.nozzle.rep.CapacityRemainingMemory',                         type: 'gauge', tags: 'deployment:cf-272bc51462f5eda69492, ip', lastSeen: '2 minutes ago', cats: ['cloudfoundry','cf','memory','capacity'] },
+
+      // Load Generator
+      { name: 'load_generator.common.request.empty',          type: 'count', tags: 'env:prod', lastSeen: '10 seconds ago', cats: ['load','generator','request'] },
+      { name: 'load_generator.common.request.attempt',        type: 'count', tags: 'env:prod', lastSeen: '5 seconds ago',  cats: ['load','generator','request','traffic'] },
+      { name: 'load_generator.common.request.failed.connect', type: 'count', tags: 'env:prod', lastSeen: '10 seconds ago', cats: ['load','generator','request','failure','error','connect'] },
+      { name: 'load_generator.common.request.sleep.connect',  type: 'count', tags: 'env:prod', lastSeen: '10 seconds ago', cats: ['load','generator','request','connect'] },
+      { name: 'load_generator.common.request.failed.other',   type: 'count', tags: 'env:prod', lastSeen: '10 seconds ago', cats: ['load','generator','request','failure','error'] },
+      { name: 'load_generator.common.request.sleep.other',    type: 'count', tags: 'env:prod', lastSeen: '10 seconds ago', cats: ['load','generator','request'] },
+      { name: 'load_generator.common.request.skipped',        type: 'count', tags: 'env:prod', lastSeen: '10 seconds ago', cats: ['load','generator','request'] },
+      { name: 'load_generator.startup.error',                 type: 'count', tags: 'env:prod', lastSeen: '5 minutes ago',  cats: ['load','generator','startup','error','failure'] },
+      { name: 'appsec_generator.trace.reqs',                  type: 'count', tags: 'env:prod', lastSeen: '5 seconds ago',  cats: ['appsec','security','trace','request'] },
+      { name: 'appsec_generator.trace.successful',            type: 'count', tags: 'env:prod', lastSeen: '5 seconds ago',  cats: ['appsec','security','trace','success'] },
+      { name: 'appsec_generator.trace.failed',                type: 'count', tags: 'env:prod', lastSeen: '10 seconds ago', cats: ['appsec','security','trace','failure','error'] },
+      { name: 'appsec_generator.signal.trigger',              type: 'count', tags: 'env:prod', lastSeen: '10 seconds ago', cats: ['appsec','security','signal'] },
+      { name: 'appsec_generator.signal.trigger.failed',       type: 'count', tags: 'env:prod', lastSeen: '10 seconds ago', cats: ['appsec','security','signal','failure','error'] },
+      { name: 'appsec_generator.signal.trigger.successful',   type: 'count', tags: 'env:prod', lastSeen: '10 seconds ago', cats: ['appsec','security','signal','success'] },
+      { name: 'appsec_generator.db.failed',                   type: 'count', tags: 'env:prod', lastSeen: '1 minute ago',   cats: ['appsec','security','database','failure','error'] },
+      { name: 'dd_trace_demo.load_generator.cassandra_table.hits',    type: 'count', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['cassandra','database','load','generator'] },
+      { name: 'dd_trace_demo.load_generator.cassandra_table.errors',  type: 'count', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['cassandra','database','load','generator','error'] },
+      { name: 'dd_trace_demo.load_generator.cassandra_cleaner.hits',  type: 'count', tags: 'env:prod', lastSeen: '5 minutes ago', cats: ['cassandra','database','load','generator'] },
+      { name: 'dd_trace_demo.load_generator.cassandra_cleaner.errors',type: 'count', tags: 'env:prod', lastSeen: '5 minutes ago', cats: ['cassandra','database','load','generator','error'] },
+
+      // DSM
+      { name: 'data_streams.sqs.dead_letter_queue.messages', type: 'gauge', tags: 'env:prod, queue_name', lastSeen: '1 minute ago', cats: ['dsm','sqs','queue','kafka','stream','dead_letter'] },
+      { name: 'data_streams.sqs.dead_letter_queue.test',     type: 'gauge', tags: 'env:prod, queue_name', lastSeen: '5 minutes ago', cats: ['dsm','sqs','queue','kafka','stream','dead_letter'] },
+
+      // Shopist MongoDB (synthesizer prefix)
+      { name: 'shopist.mongodb.opcounters.queryps',       type: 'gauge', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['shopist','mongodb','database','query','performance'] },
+      { name: 'shopist.mongodb.usage.getmore.countps',    type: 'gauge', tags: 'env:prod', lastSeen: '2 minutes ago', cats: ['shopist','mongodb','database'] },
+
+      // APM trace percentiles (additional)
+      { name: 'trace.rack.request.duration',                    type: 'gauge', tags: 'env:prod, service:web-store', lastSeen: '1 minute ago', cats: ['trace','latency','request','apm','performance'] },
+      { name: 'trace.rack.request.duration.by.service.75p',     type: 'gauge', tags: 'env:prod, service:web-store', lastSeen: '1 minute ago', cats: ['trace','latency','percentile','apm','performance'] },
+      { name: 'trace.rack.request.duration.by.service.90p',     type: 'gauge', tags: 'env:prod, service:web-store', lastSeen: '1 minute ago', cats: ['trace','latency','percentile','apm','performance'] },
+      { name: 'trace.rack.request.duration.by.service.100p',    type: 'gauge', tags: 'env:prod, service:web-store', lastSeen: '1 minute ago', cats: ['trace','latency','percentile','apm','performance'] },
+      { name: 'trace.mongo.cmd.duration',                       type: 'gauge', tags: 'env:prod, service:web-store-mongo', lastSeen: '1 minute ago', cats: ['trace','mongo','latency','database','apm'] },
+      { name: 'trace.mongo.cmd.duration.by.service.50p',        type: 'gauge', tags: 'env:prod, service:web-store-mongo', lastSeen: '1 minute ago', cats: ['trace','mongo','latency','percentile','database','apm'] },
+      { name: 'trace.mongo.cmd.duration.by.service.75p',        type: 'gauge', tags: 'env:prod, service:web-store-mongo', lastSeen: '1 minute ago', cats: ['trace','mongo','latency','percentile','database','apm'] },
+      { name: 'trace.mongo.cmd.duration.by.service.90p',        type: 'gauge', tags: 'env:prod, service:web-store-mongo', lastSeen: '1 minute ago', cats: ['trace','mongo','latency','percentile','database','apm'] },
+      { name: 'trace.mongo.cmd.duration.by.service.95p',        type: 'gauge', tags: 'env:prod, service:web-store-mongo', lastSeen: '1 minute ago', cats: ['trace','mongo','latency','percentile','database','apm'] },
+      { name: 'trace.mongo.cmd.duration.by.service.99p',        type: 'gauge', tags: 'env:prod, service:web-store-mongo', lastSeen: '1 minute ago', cats: ['trace','mongo','latency','percentile','database','apm'] },
+      { name: 'trace.mongo.cmd.duration.by.service.100p',       type: 'gauge', tags: 'env:prod, service:web-store-mongo', lastSeen: '1 minute ago', cats: ['trace','mongo','latency','percentile','database','apm'] },
+
+      // Synth test instruments (all variants)
+      { name: 'dd.synth.test.sawtooth',      type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test'] },
+      { name: 'dd.synth.test.sawtooth.a',    type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','anomaly'] },
+      { name: 'dd.synth.test.sawtooth.s',    type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test'] },
+      { name: 'dd.synth.test.sawtooth.t',    type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test'] },
+      { name: 'dd.synth.test.sawtooth.as',   type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','anomaly'] },
+      { name: 'dd.synth.test.sawtooth.at',   type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','anomaly'] },
+      { name: 'dd.synth.test.sawtooth.ts',   type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test'] },
+      { name: 'dd.synth.test.sawtooth.ast',  type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','anomaly'] },
+      { name: 'dd.synth.test.regspike',      type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','spike'] },
+      { name: 'dd.synth.test.regspike.a',    type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','spike','anomaly'] },
+      { name: 'dd.synth.test.regspike.s',    type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','spike'] },
+      { name: 'dd.synth.test.regspike.t',    type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','spike'] },
+      { name: 'dd.synth.test.regspike.as',   type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','spike','anomaly'] },
+      { name: 'dd.synth.test.regspike.at',   type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','spike','anomaly'] },
+      { name: 'dd.synth.test.regspike.ts',   type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','spike'] },
+      { name: 'dd.synth.test.regspike.ast',  type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','spike','anomaly'] },
+      { name: 'dd.synth.test.bushour',       type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','business'] },
+      { name: 'dd.synth.test.bushour.a',     type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','business','anomaly'] },
+      { name: 'dd.synth.test.bushour.s',     type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','business'] },
+      { name: 'dd.synth.test.bushour.t',     type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','business'] },
+      { name: 'dd.synth.test.bushour.as',    type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','business','anomaly'] },
+      { name: 'dd.synth.test.bushour.at',    type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','business','anomaly'] },
+      { name: 'dd.synth.test.bushour.ts',    type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','business'] },
+      { name: 'dd.synth.test.bushour.ast',   type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','test','business','anomaly'] },
+      { name: 'dd.synth.live_riders',        type: 'gauge', tags: 'env:prod', lastSeen: '30 seconds ago', cats: ['synth','live'] },
+    ];
+
+    // ── Keyword → category mapping ────────────────────────────────────────
+    const KEYWORD_MAP = {
+      'all':         null,  // null = show everything
+      'everything':  null,
+      'every':       null,
+      'list all':    null,
+      'list':        null,
+      'cpu':         ['cpu'],
+      'processor':   ['cpu'],
+      'memory':      ['memory','mem','swap'],
+      'mem':         ['memory','mem','swap'],
+      'ram':         ['memory','mem'],
+      'disk':        ['disk','storage'],
+      'storage':     ['disk','storage'],
+      'io':          ['io','disk'],
+      'network':     ['network','net','bytes','snmp','interface'],
+      'net':         ['network','net','bytes'],
+      'bytes':       ['bytes','network'],
+      'checkout':    ['checkout','cart','purchase','funnel'],
+      'cart':        ['cart','checkout','funnel'],
+      'purchase':    ['purchase','sales','cart','checkout'],
+      'funnel':      ['funnel','checkout','cart'],
+      'error':       ['error','failure'],
+      'failure':     ['failure','error'],
+      'errors':      ['error','failure'],
+      'health':      ['health','monitor','uptime'],
+      'monitor':     ['health','monitor','uptime'],
+      'uptime':      ['health','uptime'],
+      'mongodb':     ['mongodb','mongo','database'],
+      'mongo':       ['mongodb','mongo','database'],
+      'database':    ['database','mongodb','mongo','cassandra'],
+      'db':          ['database','mongodb','mongo','cassandra'],
+      'iot':         ['iot','device','sensor'],
+      'device':      ['device','iot','sensor'],
+      'sensor':      ['sensor','device','iot'],
+      'temperature': ['temperature','sensor'],
+      'azure':       ['azure'],
+      'aws':         ['aws'],
+      'ec2':         ['ec2','aws'],
+      'snmp':        ['snmp','network'],
+      'cloudfoundry':['cloudfoundry','cf'],
+      'cloud foundry':['cloudfoundry','cf'],
+      'cf':          ['cloudfoundry','cf'],
+      'load':        ['load','generator','traffic'],
+      'traffic':     ['load','generator','traffic'],
+      'generator':   ['load','generator'],
+      'appsec':      ['appsec','security'],
+      'security':    ['appsec','security','auth'],
+      'kafka':       ['kafka','dsm','stream','queue'],
+      'dsm':         ['dsm','kafka','stream'],
+      'stream':      ['dsm','kafka','stream','queue'],
+      'queue':       ['queue','dsm','sqs'],
+      'sqs':         ['sqs','queue','dsm'],
+      'login':       ['login','auth','user','security'],
+      'auth':        ['auth','login','security'],
+      'user':        ['user','login'],
+      'shopist':     ['shopist'],
+      'apm':         ['apm','trace','latency','performance'],
+      'trace':       ['trace','apm'],
+      'latency':     ['latency','performance','apm'],
+      'performance': ['performance','latency','apm','cpu'],
+      'devops':      ['devops','ci','build'],
+      'build':       ['build','devops','ci'],
+      'synth':       ['synth','test'],
+      'anomaly':     ['anomaly'],
+    };
+
+    function getQuery() {
+      return new URLSearchParams(window.location.search).get('q') || '';
+    }
+
+    function filterMetrics(query) {
+      if (!query) return METRICS;
+      const q = query.toLowerCase().trim();
+
+      // Detect "show all" intents
+      if (/\b(all|every|everything|list all|list them)\b/.test(q)) return METRICS;
+
+      // Collect required categories from keywords
+      let requiredCats = new Set();
+      let matched = false;
+
+      // Check multi-word keys first
+      Object.entries(KEYWORD_MAP).forEach(([kw, cats]) => {
+        if (q.includes(kw)) {
+          if (cats === null) { requiredCats = null; return; }
+          matched = true;
+          cats.forEach(c => requiredCats.add(c));
+        }
+      });
+
+      // If no keyword matched, do a fuzzy name search
+      if (!matched || requiredCats.size === 0) {
+        const tokens = q.split(/\s+/).filter(t => t.length > 2);
+        return METRICS.filter(m => {
+          const searchable = m.name + ' ' + m.cats.join(' ') + ' ' + m.tags;
+          return tokens.some(t => searchable.includes(t));
+        });
+      }
+
+      // requiredCats === null means show all
+      if (requiredCats === null) return METRICS;
+
+      return METRICS.filter(m =>
+        m.cats.some(c => requiredCats.has(c))
+      );
+    }
+
+    function badgeClass(type) {
+      const map = { gauge:'badge-gauge', count:'badge-count', histogram:'badge-histogram', rate:'badge-rate', distribution:'badge-distribution', increment:'badge-increment' };
+      return map[type] || 'badge-gauge';
+    }
+
+    function highlight(text, query) {
+      if (!query) return text;
+      const tokens = query.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+      let result = text;
+      tokens.forEach(t => {
+        const re = new RegExp(`(${t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+        result = result.replace(re, '<mark>$1</mark>');
+      });
+      return result;
+    }
+
+    function render() {
+      const query = getQuery();
+      const input = document.getElementById('searchInput');
+      if (query) input.value = query;
+
+      const results = filterMetrics(query);
+      const body = document.getElementById('metricsBody');
+      const noResults = document.getElementById('noResults');
+      const label = document.getElementById('showingLabel');
+
+      if (results.length === 0) {
+        body.innerHTML = '';
+        noResults.style.display = 'block';
+        label.textContent = 'No metrics found';
+        return;
+      }
+
+      noResults.style.display = 'none';
+      label.textContent = `Showing 1–${results.length} of ${results.length} metric${results.length !== 1 ? 's' : ''}`;
+
+      body.innerHTML = results.map(m => `
+        <tr>
+          <td class="metric-name">${highlight(m.name, query)}</td>
+          <td><span class="badge ${badgeClass(m.type)}">${m.type}</span></td>
+          <td class="last-seen">${m.lastSeen}</td>
+          <td class="tags-cell">${m.tags}</td>
+        </tr>
+      `).join('');
+    }
+
+    function liveSearch(query) {
+      const q = query.trim();
+      // Update URL without page reload so the back button still works
+      history.replaceState(null, '', q ? `search-results.html?q=${encodeURIComponent(q)}` : 'search-results.html');
+
+      const results = filterMetrics(q);
+      const body = document.getElementById('metricsBody');
+      const label = document.getElementById('showingLabel');
+      const noResults = document.getElementById('noResults');
+
+      if (results.length === 0) {
+        body.innerHTML = '';
+        noResults.style.display = 'block';
+        label.textContent = 'No metrics found';
+        return;
+      }
+      noResults.style.display = 'none';
+      label.textContent = `Showing 1–${results.length} of ${results.length} metric${results.length !== 1 ? 's' : ''}`;
+      body.innerHTML = results.map(m => `
+        <tr>
+          <td class="metric-name">${highlight(m.name, q)}</td>
+          <td><span class="badge ${badgeClass(m.type)}">${m.type}</span></td>
+          <td class="last-seen">${m.lastSeen}</td>
+          <td class="tags-cell">${m.tags}</td>
+        </tr>
+      `).join('');
+    }
+
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', e => liveSearch(e.target.value));
+    searchInput.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { searchInput.value = ''; liveSearch(''); }
+    });
+
+    render();
+
+    // ── AI Suggestions dropdown ───────────────────────────────────────────
+    function toggleAiDd(e) {
+      e.stopPropagation();
+      document.getElementById('aiDd').classList.toggle('open');
+    }
+    document.addEventListener('click', () => document.getElementById('aiDd').classList.remove('open'));
+
+    // ── Dashboard widget definitions per metric theme ─────────────────────
+    const DASHBOARD_THEMES = {
+      checkout: {
+        title: 'Shopist Checkout & Funnel',
+        widgets: [
+          { title: 'Checkout Failure Rate', metric: 'shopist.scenarios.checkout.failures', type: 'Timeseries', color: 'red' },
+          { title: 'Cart Abandonment %', metric: 'shopist.funnel.pct_carts_abandoned', type: 'Timeseries', color: 'yellow' },
+          { title: 'Avg Time to Checkout', metric: 'shopist.funnel.avg_time_to_checkout', type: 'Timeseries', color: 'purple' },
+          { title: 'Sales Completed', metric: 'synth.funnel.sales_completed', type: 'Timeseries', color: 'green' },
+        ]
+      },
+      error: {
+        title: 'Shopist Error Overview',
+        widgets: [
+          { title: 'Rack Request Errors', metric: 'shopist.trace.rack.request.errors', type: 'Timeseries', color: 'red' },
+          { title: 'Checkout Failures', metric: 'shopist.scenarios.checkout.failures', type: 'Timeseries', color: 'red' },
+          { title: 'Synthesizer Errors', metric: 'shopist.synthesizer.errors', type: 'Timeseries', color: 'yellow' },
+          { title: 'Login Failure Count', metric: 'shopist.user.login_attempt.failure_count', type: 'Timeseries', color: 'red' },
+        ]
+      },
+      system: {
+        title: 'System Health – IoT Fleet',
+        widgets: [
+          { title: 'CPU Utilization', metric: 'system.cpu.user', type: 'Timeseries', color: 'blue' },
+          { title: 'Usable Memory', metric: 'system.mem.usable', type: 'Timeseries', color: 'green' },
+          { title: 'Disk In Use', metric: 'system.disk.in_use', type: 'Timeseries', color: 'yellow' },
+          { title: 'Network Bytes Received', metric: 'system.net.bytes_rcvd', type: 'Timeseries', color: 'purple' },
+        ]
+      },
+      mongodb: {
+        title: 'MongoDB Database Performance',
+        widgets: [
+          { title: 'Query Rate (ops/s)', metric: 'mongodb.opcounters.queryps', type: 'Timeseries', color: 'blue' },
+          { title: 'Active Readers', metric: 'mongodb.globallock.activeclients.readers', type: 'Timeseries', color: 'yellow' },
+          { title: 'Open Cursors', metric: 'mongodb.metrics.cursor.open.total', type: 'Timeseries', color: 'purple' },
+          { title: 'Current Connections', metric: 'mongodb.connections.current', type: 'Timeseries', color: 'green' },
+        ]
+      },
+      azure: {
+        title: 'Azure IoT Hub Overview',
+        widgets: [
+          { title: 'Connected Devices', metric: 'azure.devices_iothubs.devices.connected_devices.all_protocol', type: 'Timeseries', color: 'blue' },
+          { title: 'Telemetry Ingress Success', metric: 'azure.devices_iothubs.d2c.telemetry.ingress.success', type: 'Timeseries', color: 'green' },
+          { title: 'Twin Read Failures', metric: 'azure.devices_iothubs.d2c.twin.read.failure', type: 'Timeseries', color: 'red' },
+          { title: 'Total Devices', metric: 'azure.devices_iothubs.devices.total_devices', type: 'Timeseries', color: 'purple' },
+        ]
+      },
+      apm: {
+        title: 'APM & Request Latency',
+        widgets: [
+          { title: 'Request Duration p50', metric: 'trace.rack.request.duration.by.service.50p', type: 'Timeseries', color: 'green' },
+          { title: 'Request Duration p95', metric: 'trace.rack.request.duration.by.service.95p', type: 'Timeseries', color: 'yellow' },
+          { title: 'Request Duration p99', metric: 'trace.rack.request.duration.by.service.99p', type: 'Timeseries', color: 'red' },
+          { title: 'Mongo Query Latency', metric: 'shopist.trace.mongo.query.latency.50p', type: 'Timeseries', color: 'blue' },
+        ]
+      },
+      security: {
+        title: 'Security & Auth Dashboard',
+        widgets: [
+          { title: 'Login Failures', metric: 'shopist.user.login_attempt.failure_count', type: 'Timeseries', color: 'red' },
+          { title: 'Login Success', metric: 'shopist.user.login_attempt.success_count', type: 'Timeseries', color: 'green' },
+          { title: 'AppSec Signal Triggers', metric: 'appsec_generator.signal.trigger', type: 'Timeseries', color: 'yellow' },
+          { title: 'AWS IoT Auth Errors', metric: 'aws.iot.connect_auth_error', type: 'Timeseries', color: 'red' },
+        ]
+      },
+      default: {
+        title: 'Shopist Platform Overview',
+        widgets: [
+          { title: 'Web Uptime', metric: 'shopist.web.up', type: 'Timeseries', color: 'green' },
+          { title: 'Checkout Failures', metric: 'shopist.scenarios.checkout.failures', type: 'Timeseries', color: 'red' },
+          { title: 'Request Latency p99', metric: 'trace.rack.request.duration.by.service.99p', type: 'Timeseries', color: 'yellow' },
+          { title: 'CPU Utilization', metric: 'system.cpu.user', type: 'Timeseries', color: 'blue' },
+        ]
+      }
+    };
+
+    function pickTheme(visibleMetrics) {
+      const names = visibleMetrics.map(m => m.name).join(' ');
+      const cats  = visibleMetrics.flatMap(m => m.cats);
+      const has   = c => cats.includes(c);
+      if (has('checkout') || has('funnel'))  return 'checkout';
+      if (has('error') || has('failure'))    return 'error';
+      if (has('mongodb') || has('mongo'))    return 'mongodb';
+      if (has('azure'))                      return 'azure';
+      if (has('apm') || has('latency'))      return 'apm';
+      if (has('security') || has('auth'))    return 'security';
+      if (has('system') || has('cpu') || has('memory')) return 'system';
+      return 'default';
+    }
+
+    function buildDashboardModal(visibleMetrics) {
+      const query   = getQuery();
+      const theme   = pickTheme(visibleMetrics);
+      const tdata   = DASHBOARD_THEMES[theme];
+      const ddLink  = `https://app.datadoghq.com/dashboard/new`;
+
+      document.getElementById('aiModalIcon').textContent = '📊';
+      document.getElementById('aiModalIcon').style.background = '#ede9fe';
+      document.getElementById('aiModalTitle').textContent = 'Create Dashboard';
+      document.getElementById('aiModalSubtitle').textContent = `AI-suggested layout for "${query || 'all metrics'}"`;
+
+      document.getElementById('aiModalBody').innerHTML = `
+        <div class="dash-title-row">
+          <strong style="font-size:14px;color:#111827;">${tdata.title}</strong>
+          <span class="dash-badge">✦ AI Suggested</span>
+        </div>
+        <p style="font-size:12.5px;color:#6b7280;margin-bottom:16px;">
+          Based on the <strong>${visibleMetrics.length}</strong> metric${visibleMetrics.length !== 1 ? 's' : ''} currently visible, Bits recommends the following dashboard layout:
+        </p>
+        <div class="dash-grid">
+          ${tdata.widgets.map(w => `
+            <div class="dash-widget">
+              <div class="dash-widget-title">${w.title}</div>
+              <div class="dash-widget-metric">${w.metric}</div>
+              <div class="dash-widget-type">📈 ${w.type} · env:prod</div>
+              <div class="dash-widget-preview ${w.color}"></div>
+            </div>
+          `).join('')}
+        </div>
+        <p style="font-size:11.5px;color:#9ca3af;margin-top:16px;">
+          ✦ Bits selected these widgets based on the current metric context. You can add more widgets after opening in Datadog.
+        </p>
+      `;
+
+      const encodedTitle = encodeURIComponent(tdata.title);
+      document.getElementById('aiModalFooter').innerHTML = `
+        <button class="modal-btn-secondary" onclick="closeModal(null, true)">Cancel</button>
+        <a class="modal-btn-primary" href="${ddLink}" target="_blank">Open in Datadog ↗</a>
+      `;
+    }
+
+    function buildMonitorModal(visibleMetrics) {
+      const top    = visibleMetrics[0];
+      const metric = top ? top.metric || top.name : 'shopist.scenarios.checkout.failures';
+      const query  = `avg:${metric}{env:prod}`;
+      const ddLink = `https://app.datadoghq.com/monitors/create?query=${encodeURIComponent(query)}`;
+
+      document.getElementById('aiModalIcon').textContent = '🔔';
+      document.getElementById('aiModalIcon').style.background = '#fee2e2';
+      document.getElementById('aiModalTitle').textContent = 'Create Monitor';
+      document.getElementById('aiModalSubtitle').textContent = 'Alert on the top visible metric';
+
+      document.getElementById('aiModalBody').innerHTML = `
+        <p style="font-size:13px;color:#374151;margin-bottom:14px;">
+          Bits will pre-fill a monitor for the most relevant metric currently visible:
+        </p>
+        <div class="dash-widget" style="margin-bottom:14px;">
+          <div class="dash-widget-title">Metric</div>
+          <div class="dash-widget-metric">${metric}</div>
+          <div class="dash-widget-type" style="margin-top:6px;">Query: <code style="font-size:11px;color:#374151;">${query}</code></div>
+        </div>
+        <p style="font-size:12px;color:#6b7280;">
+          The monitor page will open with this query pre-filled. Set your threshold, notification channel, and name, then save.
+        </p>
+      `;
+
+      document.getElementById('aiModalFooter').innerHTML = `
+        <button class="modal-btn-secondary" onclick="closeModal(null, true)">Cancel</button>
+        <a class="modal-btn-primary" href="${ddLink}" target="_blank">Open Monitor Creator ↗</a>
+      `;
+    }
+
+    function buildNotebookModal(visibleMetrics) {
+      const ddLink = `https://app.datadoghq.com/notebook/new`;
+      const names  = visibleMetrics.slice(0, 5).map(m => `• ${m.name}`).join('<br>');
+
+      document.getElementById('aiModalIcon').textContent = '📓';
+      document.getElementById('aiModalIcon').style.background = '#dbeafe';
+      document.getElementById('aiModalTitle').textContent = 'Create Notebook';
+      document.getElementById('aiModalSubtitle').textContent = 'Investigation notebook with metric context';
+
+      document.getElementById('aiModalBody').innerHTML = `
+        <p style="font-size:13px;color:#374151;margin-bottom:14px;">
+          Open a Datadog Notebook to document your investigation. These metrics from your current view are good starting points:
+        </p>
+        <div class="dash-widget" style="margin-bottom:14px;">
+          <div class="dash-widget-title">Suggested metrics to add</div>
+          <div style="font-family:'SF Mono','Fira Code',monospace;font-size:11.5px;color:#7c3aed;line-height:1.8;margin-top:6px;">${names}</div>
+        </div>
+        <p style="font-size:12px;color:#6b7280;">
+          Notebooks let you combine metric graphs, markdown notes, and log queries into a shareable runbook.
+        </p>
+      `;
+
+      document.getElementById('aiModalFooter').innerHTML = `
+        <button class="modal-btn-secondary" onclick="closeModal(null, true)">Cancel</button>
+        <a class="modal-btn-primary" href="${ddLink}" target="_blank">Open Notebook ↗</a>
+      `;
+    }
+
+    function aiAction(type) {
+      document.getElementById('aiDd').classList.remove('open');
+      const query   = getQuery();
+      const visible = filterMetrics(query);
+
+      if (type === 'explore') {
+        const top = visible[0];
+        window.location.href = `query-result.html?q=${encodeURIComponent(top ? top.name : 'shopist')}`;
+        return;
+      }
+
+      if (type === 'dashboard') buildDashboardModal(visible);
+      else if (type === 'monitor') buildMonitorModal(visible);
+      else if (type === 'notebook') buildNotebookModal(visible);
+
+      document.getElementById('aiModal').classList.remove('hidden');
+    }
+
+    function closeModal(e, force) {
+      if (force || (e && e.target === document.getElementById('aiModal'))) {
+        document.getElementById('aiModal').classList.add('hidden');
+      }
+    }
+  </script>
+</body>
+</html>

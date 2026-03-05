@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metrics Explorer – Health Monitoring</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f8;
+      color: #1a1a2e;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Top Nav ── */
+    .nav {
+      display: flex;
+      align-items: center;
+      background: #fff;
+      border-bottom: 1px solid #e5e5ed;
+      padding: 0 24px;
+      height: 52px;
+      gap: 0;
+      flex-shrink: 0;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 15px;
+      color: #1a1a2e;
+      margin-right: 28px;
+    }
+    .nav-logo svg { color: #7c3aed; }
+    .nav-tabs { display: flex; align-items: stretch; height: 100%; flex: 1; }
+    .nav-tab {
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      font-size: 14px;
+      color: #6b7280;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+    .nav-tab:hover { color: #1a1a2e; }
+    .nav-tab.active { color: #7c3aed; border-bottom: 2px solid #7c3aed; font-weight: 500; }
+    .nav-tab.more { font-size: 18px; letter-spacing: 2px; color: #9ca3af; }
+    .nav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+    .btn-outline {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border: 1px solid #d1d5db; border-radius: 6px;
+      background: #fff; font-size: 13px; color: #374151; cursor: pointer; white-space: nowrap;
+    }
+    .btn-outline:hover { background: #f9fafb; }
+    .btn-time { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; font-size: 13px; color: #374151; cursor: pointer; }
+    .btn-tz {
+      display: flex; flex-direction: column; align-items: flex-start;
+      padding: 4px 14px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; cursor: pointer; gap: 1px;
+    }
+    .btn-tz .tz-label { font-size: 11px; color: #6b7280; }
+    .btn-tz .tz-value { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #374151; font-weight: 500; }
+
+    /* ── Sub Bar ── */
+    .subbar {
+      display: flex;
+      align-items: center;
+      background: #fff;
+      border-bottom: 1px solid #e5e5ed;
+      padding: 0 24px;
+      height: 48px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .back-btn {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 14px; color: #374151; cursor: pointer; text-decoration: none; margin-right: auto;
+    }
+    .back-btn:hover { color: #7c3aed; }
+    .btn-save { padding: 6px 18px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; font-size: 13px; font-weight: 500; color: #374151; cursor: pointer; }
+    .btn-primary { padding: 7px 18px; border: none; border-radius: 6px; background: #7c3aed; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; }
+    .btn-primary:hover { background: #6d28d9; }
+    .legacy-link { font-size: 13px; color: #6b7280; cursor: pointer; white-space: nowrap; }
+
+    /* ── Search Bar ── */
+    .search-bar-wrap {
+      background: #fff;
+      border-bottom: 1px solid #e5e5ed;
+      padding: 10px 24px;
+      flex-shrink: 0;
+    }
+    .search-bar {
+      display: flex; align-items: center;
+      border: 2px solid #7c3aed; border-radius: 8px; padding: 9px 14px; gap: 10px; background: #fff;
+    }
+    .search-icon { color: #9ca3af; flex-shrink: 0; }
+    .search-bar input { flex: 1; border: none; outline: none; font-size: 14px; color: #374151; background: transparent; }
+    .btn-ai {
+      display: flex; align-items: center; gap: 5px;
+      background: #7c3aed; color: #fff; border: none; border-radius: 6px;
+      padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+    }
+
+    /* ── Main Layout ── */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Left Sidebar (Filters) ── */
+    .filters {
+      width: 260px;
+      flex-shrink: 0;
+      background: #fff;
+      border-right: 1px solid #e5e7eb;
+      overflow-y: auto;
+      padding: 16px 0;
+    }
+    .filter-section { margin-bottom: 4px; }
+    .filter-section-header {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 16px; cursor: pointer;
+      font-size: 13px; font-weight: 600; color: #374151;
+    }
+    .filter-section-header:hover { background: #f9fafb; }
+    .chevron-down { font-size: 10px; color: #9ca3af; transition: transform 0.15s; }
+    .filter-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 16px 7px 36px; cursor: pointer;
+    }
+    .filter-item:hover { background: #f9fafb; }
+    .filter-left { display: flex; align-items: center; gap: 8px; }
+    .checkbox {
+      width: 15px; height: 15px;
+      border: 1.5px solid #7c3aed; border-radius: 3px;
+      background: #7c3aed;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .checkbox svg { color: #fff; }
+    .filter-label { font-size: 13px; color: #374151; }
+    .filter-count { font-size: 12px; color: #9ca3af; }
+
+    /* ── Content Panel ── */
+    .content-panel { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+    .table-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .showing-label { font-size: 13px; color: #6b7280; }
+    .table-actions { display: flex; gap: 8px; }
+    .btn-ai-suggestions {
+      display: flex; align-items: center; gap: 6px;
+      background: #7c3aed; color: #fff; border: none; border-radius: 6px;
+      padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .btn-ai-suggestions .sparkle { font-size: 12px; }
+    .btn-export {
+      padding: 7px 14px; border: 1px solid #d1d5db; border-radius: 6px;
+      background: #fff; font-size: 13px; color: #374151; cursor: pointer;
+    }
+    .btn-export:hover { background: #f9fafb; }
+
+    /* ── Table ── */
+    .metrics-table {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+    th {
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: #6b7280;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    th.sortable { cursor: pointer; }
+    th.sortable:hover { color: #374151; }
+    .sort-icon { margin-left: 4px; color: #9ca3af; font-size: 10px; }
+    td {
+      padding: 13px 16px;
+      font-size: 13px;
+      color: #374151;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #faf9ff; }
+    .metric-name { font-family: "SF Mono", "Fira Code", monospace; font-size: 13px; color: #111827; }
+    .type-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+    .type-badge.gauge { background: #ede9fe; color: #7c3aed; }
+    .type-badge.count { background: #d1fae5; color: #065f46; }
+    .type-badge.histogram { background: #fef3c7; color: #92400e; }
+    .type-badge.rate { background: #fee2e2; color: #991b1b; }
+    .type-badge.distribution { background: #dbeafe; color: #1e40af; }
+    .type-badge.increment { background: #d1fae5; color: #065f46; }
+    .tags { font-size: 12px; color: #6b7280; }
+    .last-seen { font-size: 13px; color: #6b7280; white-space: nowrap; }
+
+    .help-btn {
+      position: fixed; bottom: 24px; right: 24px;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #fff; border: 1px solid #d1d5db;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: #6b7280; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Nav -->
+  <nav class="nav">
+    <div class="nav-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      Metrics
+    </div>
+    <div class="nav-tabs">
+      <div class="nav-tab">Overview</div>
+      <div class="nav-tab active">Explorer</div>
+      <div class="nav-tab">Summary</div>
+      <div class="nav-tab">Volume</div>
+      <div class="nav-tab more">···</div>
+    </div>
+    <div class="nav-right">
+      <button class="btn-outline">Configure Metrics ▾</button>
+      <button class="btn-time">1h</button>
+      <button class="btn-tz">
+        <span class="tz-label">UTC-05:00</span>
+        <span class="tz-value">Past 1 Hour ▾</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Sub Bar -->
+  <div class="subbar">
+    <a class="back-btn" href="metrics-explorer.html">← Back to search</a>
+    <button class="btn-outline">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Last 24h ▾
+    </button>
+    <button class="btn-save">Save</button>
+    <button class="btn-primary">Create Monitor</button>
+    <span class="legacy-link">Show legacy experience</span>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-bar-wrap">
+    <div class="search-bar">
+      <span class="search-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </span>
+      <input type="text" id="searchInput" placeholder="Search metrics by name or tag…" value="Show me metrics that monitor the health of my platform" />
+      <button class="btn-ai">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+        AI
+      </button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Filter Sidebar -->
+    <aside class="filters">
+
+      <div class="filter-section">
+        <div class="filter-section-header">
+          <span class="chevron-down">▼</span> Configuration
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">All tags</span>
+          </div>
+          <span class="filter-count">4.44K</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Configured tags</span>
+          </div>
+          <span class="filter-count">5</span>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-section-header">
+          <span class="chevron-down">▼</span> Percentiles
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Enabled percentiles</span>
+          </div>
+          <span class="filter-count">476</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Disabled percentiles</span>
+          </div>
+          <span class="filter-count">418</span>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-section-header">
+          <span class="chevron-down">▼</span> Historical Metrics
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Enabled historical metrics</span>
+          </div>
+          <span class="filter-count">2</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Disabled historical metrics</span>
+          </div>
+          <span class="filter-count">18.9K</span>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-section-header">
+          <span class="chevron-down">▼</span> Query Activity
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Queried in 30 days</span>
+          </div>
+          <span class="filter-count">9.83K</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Not queried in 30 days</span>
+          </div>
+          <span class="filter-count">5.97K</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Not queried in 60 days</span>
+          </div>
+          <span class="filter-count">5.01K</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Not queried in 90 days</span>
+          </div>
+          <span class="filter-count">4.27K</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Not queried in 120 days</span>
+          </div>
+          <span class="filter-count">3.52K</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Not queried in 150 days</span>
+          </div>
+          <span class="filter-count">2.66K</span>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Content -->
+    <div class="content-panel">
+
+      <div class="table-header">
+        <span class="showing-label" id="showingLabel">Showing 1–12 of 12 metrics</span>
+        <div class="table-actions">
+          <button class="btn-ai-suggestions">
+            <span class="sparkle">✦</span> AI Suggestions ▾
+          </button>
+          <button class="btn-export">Export as CSV</button>
+        </div>
+      </div>
+
+      <div class="metrics-table">
+        <table>
+          <thead>
+            <tr>
+              <th class="sortable">↕ METRIC NAME</th>
+              <th>TYPE</th>
+              <th>LAST SEEN</th>
+              <th>TAGS</th>
+            </tr>
+          </thead>
+          <tbody id="metricsBody"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="help-btn">?</div>
+
+  <script>
+    const METRICS = [
+      { name: 'shopist.web.up',                        type: 'gauge',        lastSeen: '1 minute ago',   tags: 'env:prod' },
+      { name: 'shopist.scenarios.checkout.failures',   type: 'rate',         lastSeen: '1 minute ago',   tags: 'env:prod' },
+      { name: 'shopist.synthesizer.errors',            type: 'distribution', lastSeen: '30 seconds ago', tags: 'env:prod' },
+      { name: 'shopist.user.login_attempt.failure_count', type: 'count',     lastSeen: '10 seconds ago', tags: 'user_ip_address, user_id' },
+      { name: 'shopist.user.login_attempt.success_count', type: 'count',     lastSeen: '10 seconds ago', tags: 'user_ip_address, user_id' },
+      { name: 'shopist.trace.rack.request.errors',     type: 'gauge',        lastSeen: '1 minute ago',   tags: 'env:prod' },
+      { name: 'shopist.trace.rack.request.latency.50p', type: 'gauge',       lastSeen: '1 minute ago',   tags: 'env:prod' },
+      { name: 'system.cpu.user',                       type: 'gauge',        lastSeen: '2 minutes ago',  tags: 'type:iot, availability-zone:us-west3-a, host:iot-38jHS6Cy9' },
+      { name: 'system.cpu.idle',                       type: 'gauge',        lastSeen: '2 minutes ago',  tags: 'type:iot, availability-zone:us-west3-a' },
+      { name: 'system.cpu.iowait',                     type: 'gauge',        lastSeen: '2 minutes ago',  tags: 'type:iot, availability-zone:us-east1-c' },
+      { name: 'system.load.1',                         type: 'gauge',        lastSeen: '2 minutes ago',  tags: 'type:iot, availability-zone:us-west3-a' },
+      { name: 'system.mem.usable',                     type: 'gauge',        lastSeen: '2 minutes ago',  tags: 'type:iot, availability-zone:us-west3-a, host:iot-h63sY6LZF' },
+      { name: 'system.mem.total',                      type: 'gauge',        lastSeen: '2 minutes ago',  tags: 'type:iot, availability-zone:us-west3-a' },
+      { name: 'system.swap.used',                      type: 'gauge',        lastSeen: '2 minutes ago',  tags: 'type:iot, availability-zone:us-east1-c' },
+      { name: 'system.disk.in_use',                    type: 'gauge',        lastSeen: '3 minutes ago',  tags: 'type:iot, availability-zone:us-east1-c' },
+      { name: 'system.disk.free',                      type: 'gauge',        lastSeen: '3 minutes ago',  tags: 'type:iot, availability-zone:us-west3-a' },
+      { name: 'system.io.await',                       type: 'gauge',        lastSeen: '3 minutes ago',  tags: 'type:iot, availability-zone:us-west3-a' },
+      { name: 'system.net.bytes_rcvd',                 type: 'gauge',        lastSeen: '2 minutes ago',  tags: 'type:iot, availability-zone:us-west3-a' },
+      { name: 'system.net.bytes_sent',                 type: 'gauge',        lastSeen: '2 minutes ago',  tags: 'type:iot, availability-zone:us-east1-c' },
+      { name: 'datadog.agent.running',                 type: 'gauge',        lastSeen: '1 minute ago',   tags: 'type:iot, version:7.16.1, python_version:3' },
+      { name: 'datadog.agent.started',                 type: 'gauge',        lastSeen: '5 minutes ago',  tags: 'type:iot, version:7.16.1' },
+      { name: 'mongodb.connections.current',           type: 'gauge',        lastSeen: '1 minute ago',   tags: 'env:prod, cluster-name:prod-gke-shopist-a-us-west1' },
+      { name: 'mongodb.globallock.activeclients.readers', type: 'gauge',     lastSeen: '1 minute ago',   tags: 'env:prod, cluster-name:prod-gke-shopist-a-us-west1' },
+      { name: 'aws.ec2.status_check_failed_system',    type: 'gauge',        lastSeen: '2 minutes ago',  tags: 'env:prod, region:us-west1' },
+      { name: 'aws.ec2.status_check_failed_instance',  type: 'gauge',        lastSeen: '2 minutes ago',  tags: 'env:prod, region:us-west1' },
+      { name: 'cloudfoundry.nozzle.UnhealthyCell',     type: 'gauge',        lastSeen: '2 minutes ago',  tags: 'deployment:cf-272bc51462f5eda69492' },
+      { name: 'cloudfoundry.nozzle.slowConsumerAlert', type: 'gauge',        lastSeen: '2 minutes ago',  tags: 'deployment:cf-272bc51462f5eda69492' },
+    ];
+
+    // Keywords that map to health-related results
+    const HEALTH_KEYWORDS = ['health', 'monitor', 'uptime', 'up', 'status', 'alive', 'running', 'error', 'failure', 'alert', 'system', 'cpu', 'memory', 'mem', 'disk', 'net', 'network', 'agent', 'mongo', 'checkout', 'login', 'latency', 'aws', 'ec2', 'cloud', 'iot', 'shopist', 'trace', 'rack', 'synthesizer'];
+
+    function filterMetrics(q) {
+      if (!q) return METRICS;
+      const lower = q.toLowerCase().trim();
+      // "show all" intent
+      if (/\b(all|every|everything|list all)\b/.test(lower)) return METRICS;
+      const tokens = lower.split(/\s+/).filter(t => t.length > 1);
+      return METRICS.filter(m => {
+        const searchable = (m.name + ' ' + m.tags + ' ' + m.type).toLowerCase();
+        return tokens.some(t => searchable.includes(t));
+      });
+    }
+
+    function render(q) {
+      const results = filterMetrics(q);
+      const n = results.length;
+      document.getElementById('showingLabel').textContent =
+        `Showing 1–${n} of ${n} metric${n !== 1 ? 's' : ''}`;
+      document.getElementById('metricsBody').innerHTML = results.map(m => `
+        <tr>
+          <td class="metric-name">${m.name}</td>
+          <td><span class="type-badge ${m.type}">${m.type}</span></td>
+          <td class="last-seen">${m.lastSeen}</td>
+          <td class="tags">${m.tags}</td>
+        </tr>
+      `).join('');
+    }
+
+    const input = document.getElementById('searchInput');
+    input.addEventListener('input', e => render(e.target.value));
+    input.addEventListener('keydown', e => { if (e.key === 'Escape') { input.value = ''; render(''); } });
+    // Focus clears the pre-filled prompt so user can type freely
+    input.addEventListener('focus', function() {
+      if (this.value === 'Show me metrics that monitor the health of my platform') {
+        this.value = '';
+        render('');
+      }
+    });
+
+    // Initial render — show health-related metrics from the pre-filled query
+    render('Show me metrics that monitor the health of my platform');
+  </script>
+
+</body>
+</html>

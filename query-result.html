@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metrics Explorer – Query</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f8; color: #1a1a2e; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Nav */
+    .nav { display: flex; align-items: center; background: #fff; border-bottom: 1px solid #e5e5ed; padding: 0 24px; height: 52px; flex-shrink: 0; }
+    .nav-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; color: #1a1a2e; margin-right: 28px; }
+    .nav-logo svg { color: #7c3aed; }
+    .nav-tabs { display: flex; align-items: stretch; height: 100%; flex: 1; }
+    .nav-tab { display: flex; align-items: center; padding: 0 16px; font-size: 14px; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; }
+    .nav-tab.active { color: #7c3aed; border-bottom: 2px solid #7c3aed; font-weight: 500; }
+    .nav-tab.more { font-size: 18px; letter-spacing: 2px; color: #9ca3af; }
+    .nav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+    .btn-sm { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; font-size: 13px; color: #374151; cursor: pointer; white-space: nowrap; }
+    .btn-sm:hover { background: #f9fafb; }
+    .btn-tz { display: flex; flex-direction: column; padding: 4px 14px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; cursor: pointer; }
+    .btn-tz .tz-label { font-size: 11px; color: #6b7280; }
+    .btn-tz .tz-value { font-size: 13px; color: #374151; font-weight: 500; }
+
+    /* Subbar */
+    .subbar { display: flex; align-items: center; background: #fff; border-bottom: 1px solid #e5e5ed; padding: 0 24px; height: 48px; gap: 12px; flex-shrink: 0; }
+    .back-btn { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #374151; cursor: pointer; text-decoration: none; margin-right: auto; }
+    .back-btn:hover { color: #7c3aed; }
+    .btn-primary { padding: 7px 18px; border: none; border-radius: 6px; background: #7c3aed; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; }
+    .btn-primary:hover { background: #6d28d9; }
+    .legacy-link { font-size: 13px; color: #6b7280; cursor: pointer; }
+
+    /* Search Bar */
+    .search-bar-wrap { background: #fff; border-bottom: 1px solid #e5e5ed; padding: 10px 24px; flex-shrink: 0; }
+    .search-bar { display: flex; align-items: center; border: 2px solid #7c3aed; border-radius: 8px; padding: 9px 14px; gap: 10px; background: #fff; }
+    .search-bar input { flex: 1; border: none; outline: none; font-size: 14px; color: #374151; background: transparent; }
+    .btn-ai { display: flex; align-items: center; gap: 5px; background: #7c3aed; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+
+    /* Main */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* Bits Sidebar */
+    .sidebar { width: 320px; flex-shrink: 0; background: #1e2130; display: flex; flex-direction: column; overflow: hidden; }
+    .sidebar-header { display: flex; align-items: center; gap: 12px; padding: 20px 20px 10px; }
+    .bits-icon { width: 42px; height: 42px; background: #7c3aed; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .bits-title { font-size: 17px; font-weight: 700; color: #fff; }
+    .sidebar-tagline { font-size: 12.5px; color: #9ca3af; padding: 0 20px 16px; line-height: 1.5; }
+    .sidebar-items { flex: 1; padding: 0 12px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+    .sidebar-item { display: flex; align-items: flex-start; justify-content: space-between; background: #2a2f45; border-radius: 8px; padding: 12px 14px; cursor: pointer; transition: background 0.15s; }
+    .sidebar-item:hover { background: #323857; }
+    .sidebar-item-text { font-size: 12.5px; font-weight: 500; color: #e5e7eb; line-height: 1.4; padding-right: 8px; }
+    .sidebar-item-arrow { color: #6b7280; font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+    .sidebar-section-label { font-size: 10px; font-weight: 600; color: #4b5563; text-transform: uppercase; letter-spacing: 0.08em; padding: 12px 12px 4px; }
+    .sidebar-footer { padding: 12px 12px 10px; border-top: 1px solid #2a2f45; }
+    .sidebar-input-wrap { display: flex; align-items: center; background: #2a2f45; border-radius: 8px; padding: 9px 12px; gap: 8px; }
+    .sidebar-input-wrap input { flex: 1; border: none; outline: none; background: transparent; font-size: 12.5px; color: #9ca3af; }
+    .sidebar-input-wrap input::placeholder { color: #4b5563; }
+    .send-btn { width: 28px; height: 28px; background: #7c3aed; border: none; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+    .send-btn svg { color: #fff; }
+    .sidebar-hint { text-align: center; font-size: 10.5px; color: #374151; margin-top: 6px; }
+
+    /* Chat UI */
+    .chat-history { flex: 1; padding: 8px 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; scroll-behavior: smooth; }
+    .chat-msg { display: flex; flex-direction: column; gap: 2px; }
+    .chat-msg.user { align-items: flex-end; }
+    .chat-msg.bot { align-items: flex-start; }
+    .chat-bubble { padding: 9px 12px; border-radius: 12px; font-size: 12.5px; line-height: 1.5; max-width: 90%; word-break: break-word; }
+    .chat-msg.user .chat-bubble { background: #7c3aed; color: #fff; border-bottom-right-radius: 4px; }
+    .chat-msg.bot .chat-bubble { background: #2a2f45; color: #e5e7eb; border-bottom-left-radius: 4px; white-space: pre-line; }
+    .chat-chips { display: flex; flex-wrap: wrap; gap: 5px; padding: 2px 12px 10px; }
+    .chip { padding: 5px 11px; background: #2a2f45; border: 1px solid #3a4060; border-radius: 20px; font-size: 11px; color: #a78bfa; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .chip:hover { background: #323857; border-color: #7c3aed; }
+    .typing-indicator { display: flex; gap: 4px; padding: 10px 14px; background: #2a2f45; border-radius: 12px; border-bottom-left-radius: 4px; align-self: flex-start; }
+    .typing-indicator span { width: 5px; height: 5px; border-radius: 50%; background: #6b7280; animation: tdot 1.2s infinite; }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes tdot { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-4px)} }
+    @keyframes msgIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes chipIn { from { opacity:0; transform:scale(0.88); } to { opacity:1; transform:scale(1); } }
+    @keyframes queryFlash { 0%{background:rgba(124,58,237,0.12);} 100%{background:transparent;} }
+    .chat-bubble { animation: msgIn 0.22s cubic-bezier(0.34,1.4,0.64,1) both; }
+    .chip { animation: chipIn 0.18s ease both; }
+    .chat-action-badge { display: inline-block; padding: 2px 7px; background: rgba(124,58,237,0.15); border: 1px solid rgba(167,139,250,0.3); border-radius: 4px; font-size: 10.5px; color: #a78bfa; margin-top: 4px; }
+
+    /* Content Panel */
+    .content-panel { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+
+    /* Query Builder */
+    @keyframes panelPulse { 0%{box-shadow:0 0 0 0 rgba(124,58,237,0);border-color:#e5e7eb;} 28%{box-shadow:0 0 0 5px rgba(124,58,237,0.16);border-color:#a78bfa;} 100%{box-shadow:0 0 0 0 rgba(124,58,237,0);border-color:#e5e7eb;} }
+    @keyframes fieldPop { 0%{box-shadow:0 0 0 0 rgba(124,58,237,0.55);} 55%{box-shadow:0 0 0 5px rgba(124,58,237,0);} 100%{box-shadow:0 0 0 0 rgba(124,58,237,0);} }
+    @keyframes compRowIn { from{opacity:0;max-height:0;padding-top:0;padding-bottom:0;} to{opacity:1;max-height:60px;padding-top:0;padding-bottom:0;} }
+    .qb-panel { background:#fff; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; transition:border-color 0.3s, box-shadow 0.3s; }
+    .qb-panel.panel-updating { animation: panelPulse 0.75s ease forwards; }
+    .qb-row { display:flex; align-items:center; padding:8px 14px; gap:0; min-height:50px; }
+    .qb-divider { height:1px; background:#f3f4f6; }
+    .qb-add-row { display:flex; align-items:center; gap:8px; padding:8px 14px; border-top:1px solid #f3f4f6; }
+    .qb-add-btn { display:flex; align-items:center; gap:4px; padding:5px 12px; border:1px solid #e5e7eb; border-radius:5px; background:#fff; font-size:12.5px; color:#374151; cursor:pointer; transition:background 0.15s, border-color 0.15s; }
+    .qb-add-btn:hover { background:#f9fafb; border-color:#c4b5fd; }
+    /* Series badge */
+    .qb-badge { width:24px; height:24px; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:700; flex-shrink:0; margin-right:10px; }
+    .qb-badge-a { background:#1b6fd8; }
+    .qb-badge-vs { background:#9ca3af; font-size:9px; letter-spacing:-0.5px; }
+    /* Type dropdown */
+    .qb-type { display:flex; align-items:center; gap:4px; padding:5px 10px; border:1px solid #e5e7eb; border-radius:5px; font-size:13px; color:#374151; cursor:pointer; margin-right:8px; white-space:nowrap; background:#fff; flex-shrink:0; }
+    .qb-type:hover { background:#f9fafb; }
+    /* Metric field — yellow */
+    .qb-metric { flex:0 0 auto; min-width:140px; max-width:300px; background:#fffde7; border:1px solid #e5e7eb; border-radius:5px; padding:5px 10px; font-family:"SF Mono","Fira Code",monospace; font-size:12.5px; color:#1a1a2e; cursor:pointer; margin-right:6px; transition:border-color 0.15s, box-shadow 0.2s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .qb-metric:hover { border-color:#c4b5fd; }
+    .qb-metric.field-pop { animation: fieldPop 0.65s ease; }
+    /* Labels */
+    .qb-lbl { font-size:13px; color:#6b7280; padding:0 6px; white-space:nowrap; flex-shrink:0; }
+    /* Filter field */
+    .qb-filter { min-width:110px; background:#fff; border:1px solid #e5e7eb; border-radius:5px; padding:5px 10px; font-size:13px; color:#9ca3af; cursor:pointer; margin-right:6px; transition:border-color 0.15s, box-shadow 0.2s; white-space:nowrap; }
+    .qb-filter:hover { border-color:#c4b5fd; }
+    .qb-filter.has-val { color:#374151; }
+    .qb-filter.field-pop { animation: fieldPop 0.65s ease; }
+    /* Agg selector — inline clickable word */
+    .qb-agg-wrap { position:relative; display:flex; align-items:center; margin-right:6px; }
+    .qb-agg-val { font-size:13px; font-weight:600; color:#374151; cursor:pointer; padding:5px 8px; border-radius:5px; border:1px solid transparent; transition:all 0.15s; white-space:nowrap; }
+    .qb-agg-val:hover { border-color:#c4b5fd; background:#f9f0ff; color:#7c3aed; }
+    .qb-agg-val.field-pop { animation: fieldPop 0.65s ease; border-color:#a78bfa; }
+    /* Group-by field — pink */
+    .qb-groupby-wrap { position:relative; }
+    .qb-groupby { min-width:100px; background:#fdf4ff; border:1px solid #f0e6f8; border-radius:5px; padding:5px 10px; font-size:13px; color:#c084fc; cursor:pointer; transition:border-color 0.15s, box-shadow 0.2s; white-space:nowrap; }
+    .qb-groupby:hover { border-color:#c4b5fd; background:#f5eeff; }
+    .qb-groupby.has-val { color:#7c3aed; font-weight:500; }
+    .qb-groupby.field-pop { animation: fieldPop 0.65s ease; border-color:#a78bfa; }
+    /* Modify btn */
+    .qb-modify { display:flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid #e5e7eb; border-radius:5px; background:#fff; font-size:13px; color:#374151; cursor:pointer; margin-left:8px; white-space:nowrap; transition:background 0.15s; }
+    .qb-modify:hover { background:#f9fafb; }
+    /* AI btn */
+    .qb-ai-btn { width:30px; height:30px; background:#6c32c5; border:none; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; cursor:pointer; margin-left:6px; flex-shrink:0; transition:background 0.15s; }
+    .qb-ai-btn:hover { background:#5b27a8; }
+    /* Right icons */
+    .qb-right { display:flex; align-items:center; gap:14px; margin-left:auto; padding-left:16px; color:#9ca3af; font-size:13px; flex-shrink:0; }
+    .qb-right span { cursor:pointer; transition:color 0.15s; }
+    .qb-right span:hover { color:#374151; }
+    /* Comparison row */
+    .qb-comp-row { display:flex; align-items:center; gap:8px; padding:7px 14px; border-top:1px dashed #e5e7eb; background:#fafafa; animation:compRowIn 0.25s ease; overflow:hidden; }
+    .qb-comp-lbl { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; background:linear-gradient(135deg,#ede9fe,#f3f0ff); border:1px solid #c4b5fd; border-radius:20px; font-size:10.5px; font-weight:700; color:#6d28d9; white-space:nowrap; flex-shrink:0; }
+    .qb-comp-dash { display:inline-block; width:12px; height:0; border-top:2px dashed #7c3aed; vertical-align:middle; }
+    .qb-comp-query { font-family:"SF Mono","Fira Code",monospace; font-size:12px; color:#9ca3af; flex:1; font-style:italic; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .qb-comp-remove { cursor:pointer; color:#d1d5db; padding:2px 6px; border-radius:4px; transition:color 0.15s, background 0.15s; font-size:13px; flex-shrink:0; }
+    .qb-comp-remove:hover { color:#ef4444; background:#fef2f2; }
+    /* Dropdown */
+    .qb-dropdown { position:absolute; top:calc(100% + 4px); left:0; background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 6px 20px rgba(0,0,0,0.1); z-index:200; min-width:110px; padding:4px; }
+    .qb-dropdown-opt { padding:7px 12px; font-family:"SF Mono","Fira Code",monospace; font-size:12.5px; color:#374151; cursor:pointer; border-radius:5px; white-space:nowrap; }
+    .qb-dropdown-opt:hover { background:#f3f0ff; color:#7c3aed; }
+    .qb-dropdown-opt.sel { background:#ede9fe; color:#7c3aed; font-weight:600; }
+
+    /* Chart */
+    .chart-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px 24px 16px; transition: border-color 0.3s, box-shadow 0.3s; }
+    @keyframes chartPulse { 0%{box-shadow:0 0 0 0 rgba(124,58,237,0);border-color:#e5e7eb;} 30%{box-shadow:0 0 0 5px rgba(124,58,237,0.2);border-color:#a78bfa;} 100%{box-shadow:0 0 0 0 rgba(124,58,237,0);border-color:#e5e7eb;} }
+    .chart-panel.chart-updating { animation: chartPulse 0.75s ease forwards; }
+    @keyframes toastIn { 0%{opacity:0;transform:translateX(-50%) translateY(-8px) scale(0.92);} 14%{opacity:1;transform:translateX(-50%) translateY(0) scale(1);} 72%{opacity:1;transform:translateX(-50%) translateY(0) scale(1);} 100%{opacity:0;transform:translateX(-50%) translateY(-5px) scale(0.95);} }
+    .chart-toast { position:absolute; top:10px; left:50%; transform:translateX(-50%); background:rgba(109,40,217,0.93); color:#fff; font-size:12px; font-weight:500; padding:5px 16px; border-radius:20px; white-space:nowrap; pointer-events:none; z-index:10; animation:toastIn 2.5s ease forwards; letter-spacing:0.01em; }
+    @keyframes pillPulse { 0%{box-shadow:0 0 0 0 rgba(124,58,237,0.6);} 60%{box-shadow:0 0 0 7px rgba(124,58,237,0);} 100%{box-shadow:0 0 0 0 rgba(124,58,237,0);} }
+    .pill-activated { animation: pillPulse 0.55s ease; }
+    .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .chart-title { font-size: 13px; font-weight: 600; color: #374151; }
+    .chart-meta { font-size: 12px; color: #9ca3af; }
+    .chart-container { position: relative; width: 100%; height: 260px; }
+    canvas { width: 100%; height: 100%; }
+
+    /* Legend */
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280; }
+    .legend-dot { width: 10px; height: 3px; border-radius: 2px; }
+
+    .help-btn { position: fixed; bottom: 24px; right: 24px; width: 36px; height: 36px; border-radius: 50%; background: #fff; border: 1px solid #d1d5db; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #6b7280; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="nav-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Metrics
+    </div>
+    <div class="nav-tabs">
+      <div class="nav-tab">Overview</div>
+      <div class="nav-tab active">Explorer</div>
+      <div class="nav-tab">Summary</div>
+      <div class="nav-tab">Volume</div>
+      <div class="nav-tab more">···</div>
+    </div>
+    <div class="nav-right">
+      <button class="btn-sm">Configure Metrics ▾</button>
+      <button class="btn-sm">1h</button>
+      <button class="btn-tz">
+        <span class="tz-label">UTC-05:00</span>
+        <span class="tz-value">Past 1 Hour ▾</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Subbar -->
+  <div class="subbar">
+    <a class="back-btn" href="metrics-explorer.html">← Back to search</a>
+    <button class="btn-sm">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Last 24h ▾
+    </button>
+    <button class="btn-sm">Save</button>
+    <button class="btn-primary">Create Monitor</button>
+    <span class="legacy-link">Show legacy experience</span>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-bar-wrap">
+    <div class="search-bar">
+      <span style="color:#9ca3af;flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <input id="searchInput" type="text" placeholder="Ask a question about your metrics..." />
+      <button class="btn-ai" onclick="runSearch()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+        AI
+      </button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Bits Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="bits-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+        </div>
+        <span class="bits-title">Bits Assistant</span>
+      </div>
+      <p class="sidebar-tagline">Ask follow-up questions to update the graph or explore deeper.</p>
+
+      <div class="chat-history" id="chatHistory"></div>
+      <div class="chat-chips" id="chatChips"></div>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-input-wrap">
+          <input id="chatInput" type="text" placeholder="Ask Bits anything..." />
+          <button class="send-btn" onclick="sendChatMsg()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+        <p class="sidebar-hint">Press Enter to send</p>
+      </div>
+    </aside>
+
+    <!-- Content Panel -->
+    <div class="content-panel">
+
+      <!-- Query Builder -->
+      <div class="qb-panel" id="queryPanel">
+
+        <!-- Series a row -->
+        <div class="qb-row">
+          <span class="qb-badge qb-badge-a">a</span>
+          <div class="qb-type">Metrics <span style="font-size:10px;color:#9ca3af;margin-left:2px;">▾</span></div>
+          <div class="qb-metric" id="qbMetric" title="Metric name">—</div>
+          <span class="qb-lbl">from</span>
+          <div class="qb-filter" id="qbFilter">(everywhere)</div>
+          <div class="qb-agg-wrap">
+            <div class="qb-agg-val" id="qbAgg" onclick="toggleQbDropdown('aggDd', event)">avg</div>
+            <div class="qb-dropdown" id="aggDd" style="display:none;"></div>
+          </div>
+          <span class="qb-lbl" style="padding-left:0;">by</span>
+          <div class="qb-groupby-wrap">
+            <div class="qb-groupby" id="qbGroupBy" onclick="toggleQbDropdown('gbDd', event)">(everything)</div>
+            <div class="qb-dropdown" id="gbDd" style="display:none;"></div>
+          </div>
+          <button class="qb-modify">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            Modify
+          </button>
+          <button class="qb-ai-btn" title="AI">✦</button>
+          <div class="qb-right">
+            <span title="Edit as code">&lt;/&gt;</span>
+            <span title="Style">✏</span>
+            <span title="Color">◑</span>
+            <span title="Alias">as...</span>
+          </div>
+        </div>
+
+        <!-- Comparison row (hidden until active) -->
+        <div id="qbCompRow" style="display:none;"></div>
+
+        <!-- Add buttons -->
+        <div class="qb-add-row">
+          <button class="qb-add-btn">+ Add Query</button>
+          <button class="qb-add-btn">+ Add Formula</button>
+        </div>
+
+      </div>
+
+      <!-- Chart Panel -->
+      <div class="chart-panel">
+        <div class="chart-header">
+          <span class="chart-title" id="chartTitle">—</span>
+          <span class="chart-meta" id="chartMeta">Past 24h · 1-min intervals</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="metricChart"></canvas>
+        </div>
+        <div class="legend" id="chartLegend"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="help-btn">?</div>
+
+  <script>
+  // ── NLU: metric catalog with chart shapes ──────────────────────────────
+  const METRIC_CATALOG = [
+    {
+      match: ['checkout fail','checkout error','failed checkout','checkout failure','checkout drop'],
+      metric: 'shopist.scenarios.checkout.failures',
+      type: 'rate', description: 'Checkout failures across Shopist',
+      aggs: ['max','avg','sum','min'], defaultAgg: 'max',
+      allTags: ['env','availability-zone','region','service'],
+      defaultGroupBy: 'availability-zone',
+      defaultFilter: 'env:prod',
+      shape: 'spike',
+      series: ['us-west1','us-central1','us-east1'],
+      colors: ['#7c3aed','#06b6d4','#f59e0b'],
+      yLabel: 'failures/min',
+    },
+    {
+      match: ['cart abandon','abandoned cart','pct cart','funnel'],
+      metric: 'shopist.funnel.pct_carts_abandoned',
+      type: 'gauge', description: 'Percentage of carts abandoned',
+      aggs: ['avg','max','min'], defaultAgg: 'avg',
+      allTags: ['env','region','service'],
+      defaultGroupBy: null,
+      defaultFilter: 'env:prod',
+      shape: 'business_hours',
+      series: ['shopist'],
+      colors: ['#7c3aed'],
+      yLabel: '% abandoned',
+    },
+    {
+      match: ['checkout time','time to checkout','checkout latency','avg checkout'],
+      metric: 'shopist.funnel.avg_time_to_checkout',
+      type: 'gauge', description: 'Average time to checkout (seconds)',
+      aggs: ['avg','max','p95','p99'], defaultAgg: 'avg',
+      allTags: ['env','region'],
+      defaultGroupBy: null,
+      defaultFilter: 'env:prod',
+      shape: 'variable',
+      series: ['shopist'],
+      colors: ['#7c3aed'],
+      yLabel: 'seconds',
+    },
+    {
+      match: ['login fail','login error','failed login','login failure','auth fail','authentication fail'],
+      metric: 'shopist.user.login_attempt.failure_count',
+      type: 'count', description: 'Login attempt failures',
+      aggs: ['sum','max','avg'], defaultAgg: 'sum',
+      allTags: ['user_id','user_ip_address','env'],
+      defaultGroupBy: 'user_ip_address',
+      defaultFilter: 'env:prod',
+      shape: 'random_spikes',
+      series: ['us-west','us-east'],
+      colors: ['#ef4444','#f97316'],
+      yLabel: 'failures',
+    },
+    {
+      match: ['login success','successful login','login count'],
+      metric: 'shopist.user.login_attempt.success_count',
+      type: 'count', description: 'Successful login attempts',
+      aggs: ['sum','avg','max'], defaultAgg: 'sum',
+      allTags: ['user_id','user_ip_address','env'],
+      defaultGroupBy: 'user_id',
+      defaultFilter: 'env:prod',
+      shape: 'business_hours',
+      series: ['shopist'],
+      colors: ['#10b981'],
+      yLabel: 'logins',
+    },
+    {
+      match: ['web up','uptime','slo','availability','web health','is up'],
+      metric: 'shopist.web.up',
+      type: 'gauge', description: 'Shopist web SLO (1 = up, 0 = down)',
+      aggs: ['min','avg'], defaultAgg: 'min',
+      allTags: ['env','region'],
+      defaultGroupBy: null,
+      defaultFilter: 'env:prod',
+      shape: 'mostly_one',
+      series: ['shopist'],
+      colors: ['#10b981'],
+      yLabel: 'status (1=up)',
+    },
+    {
+      match: ['cpu','processor','cpu utilization','cpu usage','cpu load'],
+      metric: 'system.cpu.user',
+      type: 'gauge', description: 'CPU user utilization across IoT hosts',
+      aggs: ['avg','max','min','p95'], defaultAgg: 'avg',
+      allTags: ['host','availability-zone','type'],
+      defaultGroupBy: 'availability-zone',
+      defaultFilter: 'type:iot',
+      shape: 'variable_high',
+      series: ['us-west3-a','us-east1-c'],
+      colors: ['#7c3aed','#06b6d4'],
+      yLabel: '% CPU',
+    },
+    {
+      match: ['memory','mem usage','ram','mem utilization','memory pressure'],
+      metric: 'system.mem.usable',
+      type: 'gauge', description: 'Usable memory across IoT hosts',
+      aggs: ['avg','min','max'], defaultAgg: 'avg',
+      allTags: ['host','availability-zone','type'],
+      defaultGroupBy: 'availability-zone',
+      defaultFilter: 'type:iot',
+      shape: 'decreasing',
+      series: ['us-west3-a','us-east1-c'],
+      colors: ['#7c3aed','#06b6d4'],
+      yLabel: 'MB usable',
+    },
+    {
+      match: ['disk','storage','disk usage','disk full','disk space'],
+      metric: 'system.disk.in_use',
+      type: 'gauge', description: 'Disk utilization (fraction used)',
+      aggs: ['avg','max','min'], defaultAgg: 'avg',
+      allTags: ['host','availability-zone','type'],
+      defaultGroupBy: 'host',
+      defaultFilter: 'type:iot',
+      shape: 'increasing',
+      series: ['us-west3-a','us-east1-c'],
+      colors: ['#f59e0b','#ef4444'],
+      yLabel: 'fraction in use',
+    },
+    {
+      match: ['network','bytes received','throughput','bandwidth'],
+      metric: 'system.net.bytes_rcvd',
+      type: 'gauge', description: 'Network bytes received',
+      aggs: ['sum','avg','max'], defaultAgg: 'sum',
+      allTags: ['host','availability-zone','type'],
+      defaultGroupBy: 'availability-zone',
+      defaultFilter: 'type:iot',
+      shape: 'variable',
+      series: ['us-west3-a','us-east1-c'],
+      colors: ['#7c3aed','#10b981'],
+      yLabel: 'bytes/s',
+    },
+    {
+      match: ['request latency','response time','latency','p95','p99','request duration','slow request'],
+      metric: 'trace.rack.request.duration',
+      type: 'gauge', description: 'Web store request duration (p95)',
+      aggs: ['p95','p99','avg','max'], defaultAgg: 'p95',
+      allTags: ['service','env','resource_name'],
+      defaultGroupBy: 'service',
+      defaultFilter: 'env:prod,service:web-store',
+      shape: 'spike',
+      series: ['web-store','web-store-mongo'],
+      colors: ['#7c3aed','#06b6d4'],
+      yLabel: 'ms',
+    },
+    {
+      match: ['request error','api error','web error','rack error','http error','5xx'],
+      metric: 'shopist.trace.rack.request.errors',
+      type: 'gauge', description: 'HTTP request errors',
+      aggs: ['sum','max','avg'], defaultAgg: 'sum',
+      allTags: ['service','env','http_status_code'],
+      defaultGroupBy: 'service',
+      defaultFilter: 'env:prod',
+      shape: 'random_spikes',
+      series: ['web-store','api'],
+      colors: ['#ef4444','#f97316'],
+      yLabel: 'errors/min',
+    },
+    {
+      match: ['mongodb','mongo query','db query','mongo ops','database query'],
+      metric: 'mongodb.opcounters.queryps',
+      type: 'gauge', description: 'MongoDB queries per second',
+      aggs: ['avg','max','sum'], defaultAgg: 'avg',
+      allTags: ['cluster-name','env','replset'],
+      defaultGroupBy: 'cluster-name',
+      defaultFilter: 'env:prod',
+      shape: 'business_hours',
+      series: ['prod-gke-shopist-a-us-west1','prod-gke-shopist-a-us-central1'],
+      colors: ['#10b981','#7c3aed'],
+      yLabel: 'queries/s',
+    },
+    {
+      match: ['mongo connection','database connection','db connection'],
+      metric: 'mongodb.connections.current',
+      type: 'gauge', description: 'Active MongoDB connections',
+      aggs: ['max','avg','min'], defaultAgg: 'max',
+      allTags: ['cluster-name','env'],
+      defaultGroupBy: 'cluster-name',
+      defaultFilter: 'env:prod',
+      shape: 'variable',
+      series: ['prod-gke-shopist-a-us-west1','prod-gke-shopist-a-us-central1'],
+      colors: ['#7c3aed','#f59e0b'],
+      yLabel: 'connections',
+    },
+    {
+      match: ['temperature','device temp','iot temp','sensor temp'],
+      metric: 'device.actual_temperature',
+      type: 'gauge', description: 'IoT device temperature (°C)',
+      aggs: ['avg','max','min'], defaultAgg: 'avg',
+      allTags: ['host','availability-zone','type'],
+      defaultGroupBy: 'availability-zone',
+      defaultFilter: 'type:iot',
+      shape: 'sinusoidal',
+      series: ['us-west3-a','us-east1-c'],
+      colors: ['#f59e0b','#ef4444'],
+      yLabel: '°C',
+    },
+    {
+      match: ['azure device','connected device','iot hub','azure iot'],
+      metric: 'azure.devices_iothubs.devices.connected_devices.all_protocol',
+      type: 'gauge', description: 'Azure IoT Hub connected devices',
+      aggs: ['sum','avg','max'], defaultAgg: 'sum',
+      allTags: ['region'],
+      defaultGroupBy: 'region',
+      defaultFilter: 'region:eastus',
+      shape: 'stable',
+      series: ['eastus','westus'],
+      colors: ['#0078d4','#7c3aed'],
+      yLabel: 'devices',
+    },
+    {
+      match: ['dead letter','dlq','sqs queue','message queue','kafka'],
+      metric: 'data_streams.sqs.dead_letter_queue.messages',
+      type: 'gauge', description: 'Dead letter queue message count',
+      aggs: ['max','sum','avg'], defaultAgg: 'max',
+      allTags: ['queue_name','env','region'],
+      defaultGroupBy: 'queue_name',
+      defaultFilter: 'env:prod',
+      shape: 'random_spikes',
+      series: ['orders-dlq','payments-dlq'],
+      colors: ['#ef4444','#f97316'],
+      yLabel: 'messages',
+    },
+    {
+      match: ['load','traffic','requests per second','rps','request volume'],
+      metric: 'load_generator.common.request.attempt',
+      type: 'count', description: 'Incoming request rate',
+      aggs: ['sum','avg','max'], defaultAgg: 'sum',
+      allTags: ['env','service','endpoint'],
+      defaultGroupBy: 'service',
+      defaultFilter: 'env:prod',
+      shape: 'business_hours',
+      series: ['web-store','api','checkout'],
+      colors: ['#7c3aed','#06b6d4','#10b981'],
+      yLabel: 'requests/s',
+    },
+    {
+      match: ['appsec','security','signal','attack','threat'],
+      metric: 'appsec_generator.signal.trigger',
+      type: 'count', description: 'AppSec signal triggers',
+      aggs: ['sum','max','count'], defaultAgg: 'sum',
+      allTags: ['env','rule_id','service'],
+      defaultGroupBy: 'service',
+      defaultFilter: 'env:prod',
+      shape: 'random_spikes',
+      series: ['web-store','api'],
+      colors: ['#ef4444','#f97316'],
+      yLabel: 'signals',
+    },
+    {
+      match: ['error','failure','fail','crash'],
+      metric: 'shopist.synthesizer.errors',
+      type: 'distribution', description: 'Shopist synthesizer errors',
+      aggs: ['sum','avg','max','p95'], defaultAgg: 'sum',
+      allTags: ['env','service'],
+      defaultGroupBy: null,
+      defaultFilter: 'env:prod',
+      shape: 'random_spikes',
+      series: ['shopist'],
+      colors: ['#ef4444'],
+      yLabel: 'errors',
+    },
+    {
+      match: ['sales','revenue','conversion','purchase','sold'],
+      metric: 'synth.funnel.sales_completed',
+      type: 'gauge', description: 'Completed sales / conversions',
+      aggs: ['sum','avg','max'], defaultAgg: 'sum',
+      allTags: ['env','region','product'],
+      defaultGroupBy: 'region',
+      defaultFilter: 'env:prod',
+      shape: 'business_hours',
+      series: ['us-west1','us-central1','us-east1'],
+      colors: ['#10b981','#7c3aed','#06b6d4'],
+      yLabel: 'sales',
+    },
+    {
+      match: ['snmp','network device','interface','packet','tcp','udp'],
+      metric: 'snmp.ifHCInOctets.rate',
+      type: 'gauge', description: 'SNMP interface inbound octets rate',
+      aggs: ['avg','max','sum'], defaultAgg: 'avg',
+      allTags: ['device','interface','env'],
+      defaultGroupBy: 'device',
+      defaultFilter: 'env:prod',
+      shape: 'variable',
+      series: ['switch-01','switch-02'],
+      colors: ['#7c3aed','#06b6d4'],
+      yLabel: 'bytes/s',
+    },
+    {
+      match: ['io','iowait','io wait','disk io'],
+      metric: 'system.io.await',
+      type: 'gauge', description: 'I/O await time',
+      aggs: ['avg','max','p95'], defaultAgg: 'avg',
+      allTags: ['host','availability-zone','type'],
+      defaultGroupBy: 'availability-zone',
+      defaultFilter: 'type:iot',
+      shape: 'variable',
+      series: ['us-west3-a','us-east1-c'],
+      colors: ['#f59e0b','#ef4444'],
+      yLabel: 'ms',
+    },
+    // fallback
+    {
+      match: ['__default__'],
+      metric: 'shopist.scenarios.checkout.failures',
+      type: 'rate', description: 'Checkout failures across Shopist',
+      aggs: ['max','avg','sum','min'], defaultAgg: 'max',
+      allTags: ['env','availability-zone','region','service'],
+      defaultGroupBy: 'availability-zone',
+      defaultFilter: 'env:prod',
+      shape: 'spike',
+      series: ['us-west1','us-central1','us-east1'],
+      colors: ['#7c3aed','#06b6d4','#f59e0b'],
+      yLabel: 'failures/min',
+    },
+  ];
+
+  // ── NLU helpers ──────────────────────────────────────────────────────────
+  const AGG_WORDS = {
+    'max':['max','maximum','highest','peak','worst'],
+    'min':['min','minimum','lowest','best'],
+    'avg':['avg','average','mean'],
+    'sum':['sum','total','count','how many'],
+    'p95':['p95','95th','95 percentile'],
+    'p99':['p99','99th','99 percentile'],
+  };
+
+  const GROUPBY_WORDS = {
+    'availability-zone':['availability zone','availability-zone','zone','az'],
+    'host':['host','hostname','server','machine','node'],
+    'service':['service'],
+    'region':['region'],
+    'cluster-name':['cluster'],
+    'env':['environment','env'],
+    'user_id':['user','user id'],
+    'user_ip_address':['ip','ip address','user ip'],
+    'queue_name':['queue'],
+    'device':['device'],
+  };
+
+  function parseQuery(q) {
+    const ql = q.toLowerCase();
+
+    // Find matching metric
+    let found = null;
+    for (const entry of METRIC_CATALOG) {
+      if (entry.match[0] === '__default__') continue;
+      if (entry.match.some(m => ql.includes(m))) { found = entry; break; }
+    }
+    if (!found) found = METRIC_CATALOG[METRIC_CATALOG.length - 1]; // fallback
+
+    // Extract aggregation override
+    let agg = found.defaultAgg;
+    for (const [key, words] of Object.entries(AGG_WORDS)) {
+      if (words.some(w => ql.includes(w)) && found.aggs.includes(key)) { agg = key; break; }
+    }
+
+    // Extract groupBy override
+    let groupBy = found.defaultGroupBy;
+    for (const [key, words] of Object.entries(GROUPBY_WORDS)) {
+      if (words.some(w => ql.includes(w)) && found.allTags.includes(key)) { groupBy = key; break; }
+    }
+
+    const ranges = METRIC_RANGES[found.metric] || { yMin: 0, yMax: 100 };
+    return { ...found, selectedAgg: agg, selectedGroupBy: groupBy, ...ranges };
+  }
+
+  function buildDDQuery(cfg) {
+    const gb = cfg.selectedGroupBy ? ` by {${cfg.selectedGroupBy}}` : '';
+    return `${cfg.selectedAgg}:${cfg.metric}{${cfg.defaultFilter}}${gb}`;
+  }
+
+  // ── Chart data generators ────────────────────────────────────────────────
+  function rnd(min, max) { return min + Math.random() * (max - min); }
+
+  // Accurate value ranges sourced directly from shopist synthesizer/main.py
+  // and scenarios/application.py submitted values.
+  const METRIC_RANGES = {
+    // scenarios/application.py: random.uniform(1,2) baseline, spike random.uniform(i*4, i*4.5) i=0..25
+    'shopist.scenarios.checkout.failures':             { yMin: 0,      yMax: 113   },
+    // synthesizer suite: BusinessHours instrument, e-commerce cart abandonment
+    'shopist.funnel.pct_carts_abandoned':              { yMin: 0,      yMax: 100   },
+    // synthesizer suite: avg time in seconds
+    'shopist.funnel.avg_time_to_checkout':             { yMin: 60,     yMax: 320   },
+    // synthesizer/main.py: increment by 1 every 10s, as sum/min = ~0-20 failures/interval
+    'shopist.user.login_attempt.failure_count':        { yMin: 0,      yMax: 20    },
+    'shopist.user.login_attempt.success_count':        { yMin: 0,      yMax: 100   },
+    // synthesizer/main.py: gauge 1 (up) or 0 (down) — drops ~5x/day for 1 min
+    'shopist.web.up':                                  { yMin: 0,      yMax: 1     },
+    // synthesizer/main.py: SawTooth anomaly+trend+shift instrument
+    'shopist.synthesizer.errors':                      { yMin: 0,      yMax: 200   },
+    // synthesizer/main.py: user = max(randint(0,100-wait),1) → 1-99; high_CPU: randint(min_now+30,99)
+    'system.cpu.user':                                 { yMin: 0,      yMax: 100   },
+    'system.cpu.system':                               { yMin: 0,      yMax: 60    },
+    'system.cpu.idle':                                 { yMin: 0,      yMax: 79    },
+    // synthesizer/main.py: randint(0,5)
+    'system.cpu.iowait':                               { yMin: 0,      yMax: 5     },
+    // synthesizer/main.py: user/2
+    'system.load.1':                                   { yMin: 0,      yMax: 50    },
+    // synthesizer/main.py: mem_one_gb=1024 MB; usable = 1024-(200+(min_now+1)*10+randint(0,201))
+    'system.mem.usable':                               { yMin: 24,     yMax: 814   },
+    'system.mem.total':                                { yMin: 1024,   yMax: 1024  },
+    // synthesizer/main.py: swap = randint(64, 512)
+    'system.swap.used':                                { yMin: 64,     yMax: 512   },
+    'system.swap.free':                                { yMin: 512,    yMax: 960   },
+    // synthesizer/main.py: disk_one_gb=1024*1024; total=40-400 × disk_one_gb bytes; in_use = fraction+0.01
+    'system.disk.in_use':                              { yMin: 0.01,   yMax: 0.95  },
+    'system.disk.total':                               { yMin: 41943040, yMax: 419430400 },
+    'system.disk.free':                                { yMin: 6221520,  yMax: 314572800 },
+    // synthesizer/main.py: random.randint(4, 32) ms
+    'system.io.await':                                 { yMin: 4,      yMax: 32    },
+    // synthesizer/main.py: randint(100000, 200000) bytes
+    'system.net.bytes_rcvd':                           { yMin: 100000, yMax: 200000 },
+    'system.net.bytes_sent':                           { yMin: 100000, yMax: 200000 },
+    // scenarios/application.py: submit_metric_duration, val=0..25 → p95 ~ 0..62 units
+    'trace.rack.request.duration':                     { yMin: 0,      yMax: 65    },
+    'shopist.trace.rack.request.errors':               { yMin: 0,      yMax: 50    },
+    'shopist.trace.rack.request.latency.50p':          { yMin: 0,      yMax: 40    },
+    // scenarios/application.py: random.uniform(3500, 3500+100*25) → 3500-6000 qps
+    'mongodb.opcounters.queryps':                      { yMin: 3500,   yMax: 6000  },
+    // scenarios/application.py: random.uniform(70, 70+2*25) → 70-120
+    'mongodb.globallock.activeclients.readers':        { yMin: 70,     yMax: 120   },
+    // scenarios/application.py: random.uniform(35, 35+2*25) → 35-85
+    'mongodb.metrics.cursor.open.total':               { yMin: 35,     yMax: 85    },
+    // scenarios/application.py: random.uniform(1, ~13)
+    'mongodb.globallock.currentqueue.readers':         { yMin: 0,      yMax: 13    },
+    // scenarios/application.py: random.uniform(3584, 3584+100*25) → 3584-6084 MiB
+    'mongodb.mem.virtual':                             { yMin: 3584,   yMax: 6084  },
+    // scenarios/application.py: random.uniform(275, 275+5*25) → 275-400
+    'mongodb.connections.current':                     { yMin: 275,    yMax: 400   },
+    // synthesizer/main.py: constant 22°C; actual_temperature from suite ≈ 22 ± 4°C
+    'device.actual_temperature':                       { yMin: 18,     yMax: 26    },
+    'device.target_temperature':                       { yMin: 22,     yMax: 22    },
+    'device.cpu_temperature':                          { yMin: 35,     yMax: 75    },
+    'device.flow_rate':                                { yMin: 0,      yMax: 100   },
+    'device.wlan_signal_dbm':                          { yMin: -90,    yMax: -30   },
+    // synthesizer/main.py: api.Metric.send — eastus=23, westus=17 (near-constant)
+    'azure.devices_iothubs.devices.connected_devices.all_protocol': { yMin: 14, yMax: 27 },
+    'azure.devices_iothubs.devices.total_devices':     { yMin: 22,     yMax: 42    },
+    // synthesizer/main.py: 0 most of the time, randint(4,8) 2% of the time
+    'cloudfoundry.nozzle.cc.job_queue_length.total':   { yMin: 0,      yMax: 8     },
+    // synthesizer/main.py: randint(2,9)*1024 → 2048-9216 MB remaining
+    'cloudfoundry.nozzle.rep.CapacityRemainingMemory': { yMin: 2048,   yMax: 9216  },
+    'cloudfoundry.nozzle.AuctioneerLRPAuctionsStarted':{ yMin: 95,     yMax: 102   },
+    // load generator: high-frequency increments
+    'load_generator.common.request.attempt':           { yMin: 0,      yMax: 1000  },
+    'load_generator.common.request.failed.connect':    { yMin: 0,      yMax: 50    },
+    'appsec_generator.trace.reqs':                     { yMin: 0,      yMax: 300   },
+    'appsec_generator.signal.trigger':                 { yMin: 0,      yMax: 25    },
+    'appsec_generator.signal.trigger.failed':          { yMin: 0,      yMax: 10    },
+    'data_streams.sqs.dead_letter_queue.messages':     { yMin: 0,      yMax: 50    },
+    'synth.funnel.sales_completed':                    { yMin: 0,      yMax: 500   },
+    'snmp.ifHCInOctets.rate':                          { yMin: 0,      yMax: 1000000 },
+  };
+
+  // generateSeries now uses actual yMin/yMax from METRIC_RANGES
+  function generateSeries(shape, yMin, yMax, n = 60) {
+    const range = yMax - yMin;
+    const data = [];
+    for (let i = 0; i < n; i++) {
+      const t = i / n;
+      let norm; // 0.0 – 1.0, then scaled to [yMin, yMax]
+      switch (shape) {
+        case 'spike':
+          // flat baseline ~5-8% of range, spike to 55-95% at midpoint
+          norm = (t > 0.55 && t < 0.75)
+            ? 0.55 + Math.abs(Math.sin((t - 0.55) * Math.PI * 5)) * 0.4 + rnd(-0.02, 0.02)
+            : rnd(0.01, 0.07);
+          break;
+        case 'business_hours':
+          norm = Math.max(0, Math.sin((t - 0.15) * Math.PI) * rnd(0.6, 0.9) + rnd(-0.04, 0.04));
+          break;
+        case 'variable':
+          norm = Math.max(0.05, Math.min(0.95, 0.45 + rnd(-0.2, 0.2) + Math.sin(t * Math.PI * 5) * 0.12));
+          break;
+        case 'variable_high':
+          norm = Math.max(0.2, Math.min(0.95, 0.6 + rnd(-0.2, 0.2) + Math.sin(t * Math.PI * 3) * 0.1));
+          break;
+        case 'increasing':
+          norm = Math.max(0, Math.min(1, 0.1 + t * 0.7 + rnd(-0.03, 0.03)));
+          break;
+        case 'decreasing':
+          norm = Math.max(0, Math.min(1, 0.9 - t * 0.6 + rnd(-0.04, 0.04)));
+          break;
+        case 'mostly_one':
+          // 1 (up) except two brief 1-min windows → drops to 0
+          norm = (t > 0.34 && t < 0.36) || (t > 0.71 && t < 0.73) ? 0 : 0.97 + rnd(-0.01, 0.01);
+          break;
+        case 'random_spikes':
+          norm = Math.random() < 0.07 ? rnd(0.4, 0.9) : rnd(0, 0.06);
+          break;
+        case 'sinusoidal':
+          norm = Math.max(0, Math.min(1, 0.5 + Math.sin(t * Math.PI * 4) * 0.35 + rnd(-0.02, 0.02)));
+          break;
+        case 'stable':
+          // near-constant (e.g. azure device count = 23 or 17)
+          norm = 0.55 + rnd(-0.04, 0.04);
+          break;
+        case 'sawtooth':
+          norm = Math.max(0, Math.min(1, ((t * 5) % 1) * 0.8 + rnd(-0.03, 0.03)));
+          break;
+        default:
+          norm = rnd(0.3, 0.7);
+      }
+      data.push(yMin + norm * range);
+    }
+    return data;
+  }
+
+  // ── Chart rendering ──────────────────────────────────────────────────────
+  let currentCfg = null;
+
+  function drawChart(cfg) {
+    const canvas = document.getElementById('metricChart');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = canvas.offsetWidth * dpr;
+    canvas.height = canvas.offsetHeight * dpr;
+    ctx.scale(dpr, dpr);
+    const W = canvas.offsetWidth, H = canvas.offsetHeight;
+    const pl = 52, pr = 16, pt = 12, pb = 36;
+    const cw = W - pl - pr, ch = H - pt - pb;
+
+    const numSeries = Math.min(cfg.series.length, cfg.colors.length);
+    const seriesData = Array.from({length: numSeries}, () => generateSeries(cfg.shape, cfg.yMin ?? 0, cfg.yMax ?? 100));
+    const compData = cfg.comparison
+      ? Array.from({length: numSeries}, () => generateSeries(cfg.shape, cfg.yMin ?? 0, cfg.yMax ?? 100))
+      : null;
+
+    const allVals = seriesData.flat();
+    const dataMin = Math.min(...allVals);
+    const dataMax = Math.max(...allVals);
+    const yMin = Math.max(0, dataMin * 0.85);
+    const yMax = dataMax * 1.12;
+    const n = seriesData[0].length;
+
+    const toX = i => pl + (i / (n - 1)) * cw;
+    const toY = v => pt + ch - ((v - yMin) / (yMax - yMin + 0.0001)) * ch;
+    const xLabels = genXLabels(n);
+
+    function drawGrid() {
+      const yTicks = 5;
+      ctx.font = `11px -apple-system, sans-serif`;
+      ctx.fillStyle = '#9ca3af';
+      ctx.textAlign = 'right';
+      for (let i = 0; i <= yTicks; i++) {
+        const v = yMin + (i / yTicks) * (yMax - yMin);
+        const y = toY(v);
+        ctx.fillText(fmtNum(v), pl - 6, y + 4);
+        ctx.beginPath(); ctx.strokeStyle = '#f3f4f6'; ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]); ctx.moveTo(pl, y); ctx.lineTo(pl + cw, y); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      ctx.textAlign = 'center'; ctx.fillStyle = '#9ca3af';
+      xLabels.forEach(({ idx, label }) => {
+        ctx.fillText(label, toX(idx), H - 6);
+        ctx.beginPath(); ctx.strokeStyle = '#f3f4f6'; ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]); ctx.moveTo(toX(idx), pt); ctx.lineTo(toX(idx), pt + ch); ctx.stroke();
+        ctx.setLineDash([]);
+      });
+    }
+
+    function drawSeries(revealFraction, compFraction) {
+      // Clip series to revealed width
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(pl, 0, cw * revealFraction, H);
+      ctx.clip();
+
+      seriesData.forEach((data, si) => {
+        const color = cfg.colors[si];
+        const grad = ctx.createLinearGradient(0, pt, 0, pt + ch);
+        grad.addColorStop(0, hexAlpha(color, 0.15));
+        grad.addColorStop(1, hexAlpha(color, 0.01));
+        ctx.beginPath();
+        ctx.moveTo(toX(0), toY(data[0]));
+        for (let i = 1; i < n; i++) {
+          const cx_ = (toX(i-1) + toX(i)) / 2;
+          ctx.bezierCurveTo(cx_, toY(data[i-1]), cx_, toY(data[i]), toX(i), toY(data[i]));
+        }
+        ctx.lineTo(toX(n-1), pt+ch); ctx.lineTo(toX(0), pt+ch); ctx.closePath();
+        ctx.fillStyle = grad; ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(toX(0), toY(data[0]));
+        for (let i = 1; i < n; i++) {
+          const cx_ = (toX(i-1) + toX(i)) / 2;
+          ctx.bezierCurveTo(cx_, toY(data[i-1]), cx_, toY(data[i]), toX(i), toY(data[i]));
+        }
+        ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+      });
+      ctx.restore();
+
+      // Comparison overlay fades in after main series reveal completes
+      if (compData && compFraction > 0) {
+        ctx.save();
+        ctx.globalAlpha = compFraction;
+        compData.forEach((data, si) => {
+          const color = cfg.colors[si];
+          ctx.beginPath();
+          ctx.setLineDash([6, 4]);
+          ctx.moveTo(toX(0), toY(data[0]));
+          for (let i = 1; i < n; i++) {
+            const cx_ = (toX(i-1) + toX(i)) / 2;
+            ctx.bezierCurveTo(cx_, toY(data[i-1]), cx_, toY(data[i]), toX(i), toY(data[i]));
+          }
+          ctx.strokeStyle = hexAlpha(color, 0.5); ctx.lineWidth = 1.5; ctx.stroke();
+          ctx.setLineDash([]);
+        });
+        ctx.globalAlpha = 1;
+        ctx.restore();
+      }
+    }
+
+    // Cancel any running animation on this canvas
+    if (canvas._raf) cancelAnimationFrame(canvas._raf);
+
+    const duration = 480;
+    let t0 = null;
+
+    function frame(ts) {
+      if (!t0) t0 = ts;
+      const elapsed = ts - t0;
+      const raw = Math.min(elapsed / duration, 1);
+      // Cubic ease-out for main reveal
+      const ease = 1 - Math.pow(1 - raw, 3);
+      // Comparison fades in during the last 30% of the animation
+      const compEase = raw > 0.7 ? Math.min((raw - 0.7) / 0.3, 1) : 0;
+
+      ctx.clearRect(0, 0, W, H);
+      drawGrid();
+      drawSeries(ease, compEase);
+
+      if (raw < 1) canvas._raf = requestAnimationFrame(frame);
+    }
+    canvas._raf = requestAnimationFrame(frame);
+  }
+
+  function hexAlpha(hex, a) {
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  function fmtNum(n) {
+    if (Math.abs(n) >= 1000000) return (n/1000000).toFixed(1)+'M';
+    if (Math.abs(n) >= 1000) return (n/1000).toFixed(1)+'K';
+    if (Math.abs(n) < 10) return n.toFixed(2);
+    return Math.round(n).toString();
+  }
+
+  function genXLabels(n) {
+    const now = new Date();
+    const labels = [];
+    const step = Math.floor(n / 7);
+    for (let i = 0; i <= 6; i++) {
+      const idx = Math.min(i * step, n - 1);
+      const d = new Date(now.getTime() - (n - 1 - idx) * 60000);
+      const h = d.getHours(), m = d.getMinutes();
+      const hh = h % 12 || 12;
+      const mm = m.toString().padStart(2,'0');
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      labels.push({ idx, label: `${hh}:${mm} ${ampm}` });
+    }
+    return labels;
+  }
+
+  // ── UI update ────────────────────────────────────────────────────────────
+  function renderPage(cfg) {
+    currentCfg = cfg;
+
+    updateQueryBuilder(cfg, null);
+
+    // Chart title
+    document.getElementById('chartTitle').textContent = cfg.description;
+    document.getElementById('chartMeta').textContent = `Past 24h · 1-min intervals · ${cfg.yLabel}`;
+
+    // Legend
+    const legendEl = document.getElementById('chartLegend');
+    const series = cfg.selectedGroupBy ? cfg.series : [cfg.metric.split('.').slice(-1)[0]];
+    let legendHTML = series.map((s, i) => `
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${cfg.colors[i % cfg.colors.length]};"></div>
+        ${cfg.selectedGroupBy ? cfg.selectedGroupBy + ':' : ''}${s}
+      </div>
+    `).join('');
+    if (cfg.comparison) {
+      legendHTML += series.map((s, i) => `
+        <div class="legend-item" style="opacity:0.6;">
+          <div class="legend-dot" style="background:${cfg.colors[i % cfg.colors.length]};border: 2px dashed ${cfg.colors[i % cfg.colors.length]};height:0;"></div>
+          ${s} (${cfg.comparisonLabel || 'last week'})
+        </div>
+      `).join('');
+    }
+    legendEl.innerHTML = legendHTML;
+
+    // Init chat if first render (chatHistory empty)
+    if (!document.getElementById('chatHistory').dataset.initialized) {
+      initChat(cfg);
+    }
+
+    setTimeout(() => drawChart(cfg), 50);
+  }
+
+  function selectAgg(agg) {
+    currentCfg = { ...currentCfg, selectedAgg: agg };
+    renderChartOnly(`Aggregation: ${agg}`, 'agg');
+  }
+
+  function selectTag(tag) {
+    currentCfg = { ...currentCfg, selectedGroupBy: tag };
+    renderChartOnly(tag ? `Grouped by ${tag}` : 'Breakdown removed', 'groupby');
+  }
+
+  function navigate(q) {
+    window.location.href = `query-result.html?q=${encodeURIComponent(q)}`;
+  }
+
+  // ── Query Builder ─────────────────────────────────────────────────────────
+  function updateQueryBuilder(cfg, changedPart) {
+    // Metric field
+    const metricEl = document.getElementById('qbMetric');
+    metricEl.textContent = cfg.metric;
+    if (changedPart === 'metric') popField(metricEl);
+
+    // Filter
+    const filterEl = document.getElementById('qbFilter');
+    const filterText = cfg.defaultFilter || '';
+    filterEl.textContent = filterText || '(everywhere)';
+    filterEl.classList.toggle('has-val', !!filterText);
+    if (changedPart === 'filter') popField(filterEl);
+
+    // Aggregation
+    const aggEl = document.getElementById('qbAgg');
+    aggEl.textContent = cfg.selectedAgg;
+    if (changedPart === 'agg') popField(aggEl);
+
+    // Group-by
+    const gbEl = document.getElementById('qbGroupBy');
+    const gbText = cfg.selectedGroupBy || '';
+    gbEl.textContent = gbText || '(everything)';
+    gbEl.classList.toggle('has-val', !!gbText);
+    if (changedPart === 'groupby') popField(gbEl);
+
+    // Rebuild dropdowns
+    rebuildAggDd(cfg);
+    rebuildGbDd(cfg);
+
+    // Comparison row
+    updateQbCompRow(cfg);
+  }
+
+  function popField(el) {
+    el.classList.remove('field-pop');
+    void el.offsetWidth;
+    el.classList.add('field-pop');
+    el.addEventListener('animationend', () => el.classList.remove('field-pop'), { once: true });
+  }
+
+  function updateQbCompRow(cfg) {
+    const row = document.getElementById('qbCompRow');
+    if (!cfg.comparison) { row.style.display = 'none'; row.innerHTML = ''; return; }
+    row.style.display = '';
+    row.innerHTML = `<div class="qb-comp-row">
+      <span class="qb-badge qb-badge-vs">vs</span>
+      <span class="qb-comp-lbl"><span class="qb-comp-dash"></span>vs. ${cfg.comparisonLabel || 'comparison'}</span>
+      <span class="qb-comp-query">${buildDDQuery(cfg)}</span>
+      <span class="qb-comp-remove" onclick="removeComparison()" title="Remove comparison">✕</span>
+    </div>`;
+  }
+
+  function removeComparison() {
+    currentCfg = { ...currentCfg, comparison: false };
+    renderChartOnly('Comparison removed', 'comparison');
+  }
+
+  function rebuildAggDd(cfg) {
+    document.getElementById('aggDd').innerHTML = cfg.aggs.map(a =>
+      `<div class="qb-dropdown-opt ${a === cfg.selectedAgg ? 'sel' : ''}" onclick="selectAgg('${a}');closeAllDd();">${a}</div>`
+    ).join('');
+  }
+
+  function rebuildGbDd(cfg) {
+    document.getElementById('gbDd').innerHTML =
+      `<div class="qb-dropdown-opt ${!cfg.selectedGroupBy ? 'sel' : ''}" onclick="selectTag(null);closeAllDd();">(everything)</div>` +
+      cfg.allTags.map(t =>
+        `<div class="qb-dropdown-opt ${t === cfg.selectedGroupBy ? 'sel' : ''}" onclick="selectTag('${t}');closeAllDd();">${t}</div>`
+      ).join('');
+  }
+
+  function toggleQbDropdown(id, e) {
+    e.stopPropagation();
+    const dd = document.getElementById(id);
+    const wasHidden = dd.style.display === 'none';
+    closeAllDd();
+    dd.style.display = wasHidden ? 'block' : 'none';
+  }
+
+  function closeAllDd() {
+    ['aggDd','gbDd'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  }
+
+  document.addEventListener('click', closeAllDd);
+
+  function pulseQueryPanel() {
+    const panel = document.getElementById('queryPanel');
+    panel.classList.remove('panel-updating');
+    void panel.offsetWidth;
+    panel.classList.add('panel-updating');
+  }
+
+  function showChartToast(msg) {
+    const container = document.querySelector('.chart-container');
+    const old = container.querySelector('.chart-toast');
+    if (old) old.remove();
+    const el = document.createElement('div');
+    el.className = 'chart-toast';
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(() => { if (el.parentNode) el.remove(); }, 2600);
+  }
+
+  function pulseChartPanel() {
+    const panel = document.querySelector('.chart-panel');
+    panel.classList.remove('chart-updating');
+    void panel.offsetWidth;
+    panel.classList.add('chart-updating');
+  }
+
+  function renderChartOnly(toast, changedPart) {
+    const cfg = currentCfg;
+
+    // Pulse both panels + chart toast
+    pulseChartPanel();
+    pulseQueryPanel();
+    if (toast) showChartToast(toast);
+
+    updateQueryBuilder(cfg, changedPart || null);
+
+    // Legend
+    const series = cfg.selectedGroupBy ? cfg.series : [cfg.metric.split('.').slice(-1)[0]];
+    let legendHTML = series.map((s, i) => `
+      <div class="legend-item"><div class="legend-dot" style="background:${cfg.colors[i % cfg.colors.length]};"></div>
+      ${cfg.selectedGroupBy ? cfg.selectedGroupBy + ':' : ''}${s}</div>`).join('');
+    if (cfg.comparison) {
+      legendHTML += series.map((s, i) => `
+        <div class="legend-item" style="opacity:0.6;"><div class="legend-dot" style="background:${cfg.colors[i % cfg.colors.length]};border:2px dashed ${cfg.colors[i % cfg.colors.length]};height:0;"></div>
+        ${s} (${cfg.comparisonLabel || 'last week'})</div>`).join('');
+    }
+    document.getElementById('chartLegend').innerHTML = legendHTML;
+
+    setTimeout(() => drawChart(cfg), 30);
+  }
+
+  function runSearch() {
+    const q = document.getElementById('searchInput').value.trim();
+    if (q) navigate(q);
+  }
+
+  document.getElementById('searchInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') runSearch();
+  });
+
+  // ── Chat ──────────────────────────────────────────────────────────────────
+  const CHAT_INTENTS = [
+    {
+      id: 'compare_week', chip: 'Compare to last week',
+      patterns: [/compare.*last\s*week|vs\.?\s*last\s*week|week.?over.?week|wow\b/i],
+      action: () => {
+        currentCfg = { ...currentCfg, comparison: true, comparisonLabel: 'last week' };
+        renderChartOnly('Comparison: last week added', 'comparison');
+        return "Done — I've added last week as dashed lines. Solid = now, dashed = last week. Look for any divergence in the second half of the window, that's usually where weekly drift shows up.\n\nWant me to call out the biggest difference, or set up a WoW alert?";
+      }
+    },
+    {
+      id: 'compare_yesterday', chip: 'Compare to yesterday',
+      patterns: [/compare.*yesterday|vs\.?\s*yesterday|day.?over.?day/i],
+      action: () => {
+        currentCfg = { ...currentCfg, comparison: true, comparisonLabel: 'yesterday' };
+        renderChartOnly('Comparison: yesterday added', 'comparison');
+        return "Yesterday's data is now overlaid as dashed lines. If the solid line is tracking well above or below the dashed one, that's worth investigating.\n\nWant to zoom into the spike region or switch to a different aggregation?";
+      }
+    },
+    {
+      id: 'compare_month',
+      patterns: [/compare.*last\s*month|vs\.?\s*last\s*month|month.?over.?month|mom\b/i],
+      action: () => {
+        currentCfg = { ...currentCfg, comparison: true, comparisonLabel: 'last month' };
+        renderChartOnly('Comparison: last month added', 'comparison');
+        return "Last month's data added as dashed lines — good for catching long-term drift or seasonal patterns.\n\nAnything specific you're comparing, like a deploy or a traffic change?";
+      }
+    },
+    {
+      id: 'remove_comparison',
+      patterns: [/remove.*(comparison|dashed|overlay)|clear.*(comparison|overlay)|hide comparison/i],
+      action: () => { currentCfg = { ...currentCfg, comparison: false }; renderChartOnly('Comparison removed'); return "Cleared — back to the current period only."; }
+    },
+    {
+      id: 'agg_p99', chip: 'Show p99',
+      patterns: [/\bp99\b|99th percentile/i],
+      action: () => {
+        if (!currentCfg.aggs.includes('p99')) return `p99 isn't available for **${currentCfg.metric}**. Available aggregations: ${currentCfg.aggs.join(', ')}.\n\np95 is usually the next best option for tail latency — want me to switch to that?`;
+        selectAgg('p99');
+        return "Switched to **p99** — you're now seeing the slowest 1% of requests. This is the most sensitive view for catching tail latency that real users experience.\n\nWant to break this down by service to see which one is dragging it up?";
+      }
+    },
+    {
+      id: 'agg_p95', chip: 'Show p95',
+      patterns: [/\bp95\b|95th percentile/i],
+      action: () => {
+        if (!currentCfg.aggs.includes('p95')) return `p95 isn't available for **${currentCfg.metric}**. Try: ${currentCfg.aggs.join(', ')}.`;
+        selectAgg('p95');
+        return "Switched to **p95**. This captures the worst 5% of requests — a good balance between sensitivity and noise.\n\nCommon follow-up: compare this to last week to see if it's trending worse.";
+      }
+    },
+    {
+      id: 'agg_max',
+      patterns: [/\bmax(imum)?\b|peak\s*aggregat|highest\s*aggregat/i],
+      action: () => {
+        if (!currentCfg.aggs.includes('max')) return `max isn't an option here. Available: ${currentCfg.aggs.join(', ')}.`;
+        selectAgg('max');
+        return "Switched to **max** — every point now shows the single highest value in that interval. Watch for outlier spikes that avg would smooth over.";
+      }
+    },
+    {
+      id: 'agg_avg',
+      patterns: [/\bavg\b|average|mean\s+value/i],
+      action: () => {
+        if (!currentCfg.aggs.includes('avg')) return `avg isn't an option here. Available: ${currentCfg.aggs.join(', ')}.`;
+        selectAgg('avg');
+        return "Switched to **avg**. This is the mean across all sources per interval — good for overall trend, but can hide outliers. Want me to also show p95 for comparison?";
+      }
+    },
+    {
+      id: 'agg_sum',
+      patterns: [/\bsum\b|total\s+across/i],
+      action: () => {
+        if (!currentCfg.aggs.includes('sum')) return `sum isn't an option here. Available: ${currentCfg.aggs.join(', ')}.`;
+        selectAgg('sum');
+        return "Switched to **sum** — aggregating the total across all sources. Useful for counts and rates where you want the combined picture, not the per-source average.";
+      }
+    },
+    {
+      id: 'group_host', chip: 'Break down by host',
+      patterns: [/(break.*down|group|split).*(by\s+)?host|by\s+host|per\s+host/i],
+      action: () => {
+        if (!currentCfg.allTags.includes('host')) return `host isn't a tag on **${currentCfg.metric}**. Available tags: ${currentCfg.allTags.join(', ')}.\n\nWant me to try one of those instead?`;
+        selectTag('host');
+        return "Grouped by **host** — each line is a different host now. If one is consistently higher than the rest, that's your hotspot.\n\nWant to filter to just the top offenders, or create a monitor that alerts on any single host crossing a threshold?";
+      }
+    },
+    {
+      id: 'group_service',
+      patterns: [/(break.*down|group|split).*(by\s+)?service|by\s+service|per\s+service/i],
+      action: () => {
+        if (!currentCfg.allTags.includes('service')) return `service isn't a tag on **${currentCfg.metric}**. Available: ${currentCfg.allTags.join(', ')}.`;
+        selectTag('service');
+        return "Grouped by **service**. Look for any service pulling significantly ahead — that's where to focus your investigation.\n\nWant me to explain what each service does, or check if there are existing monitors for the top one?";
+      }
+    },
+    {
+      id: 'group_region',
+      patterns: [/(break.*down|group|split).*(by\s+)?region|by\s+region|per\s+region/i],
+      action: () => {
+        if (!currentCfg.allTags.includes('region')) return `region isn't a tag on **${currentCfg.metric}**. Available: ${currentCfg.allTags.join(', ')}.`;
+        selectTag('region');
+        return "Grouped by **region**. Regional divergence is often a sign of a localized deploy, network issue, or traffic shift.\n\nWant to compare this to last week by region as well?";
+      }
+    },
+    {
+      id: 'group_zone',
+      patterns: [/(break.*down|group|split).*(by\s+)?(zone|az)|by\s+(zone|az)|availability.?zone/i],
+      action: () => {
+        if (!currentCfg.allTags.includes('availability-zone')) return `availability-zone isn't a tag on **${currentCfg.metric}**. Available: ${currentCfg.allTags.join(', ')}.`;
+        selectTag('availability-zone');
+        return "Grouped by **availability zone**. If one AZ is out of step with the others, that's a sign of an AZ-specific issue or imbalanced traffic.\n\nWant to create an alert that fires when any single AZ exceeds a threshold?";
+      }
+    },
+    {
+      id: 'remove_breakdown',
+      patterns: [/remove.*(breakdown|groupby|group)|no\s+breakdown|single\s+line|ungroup/i],
+      action: () => { selectTag(null); return "Removed the breakdown — showing the aggregated view now. Everything is rolled up into a single line.\n\nWant to try a different grouping, or overlay a comparison period?"; }
+    },
+    {
+      id: 'peak', chip: "What's the peak?",
+      patterns: [/what.*peak|peak\s+value|highest\s+value|max\s+value|what.*max/i],
+      action: () => {
+        const peak = fmtNum(currentCfg.yMax);
+        return `Based on the synthesizer's submitted ranges, **${currentCfg.metric}** peaks at around **${peak} ${currentCfg.yLabel}**.\n\nFor the actual live peak from your Datadog org, ask me "what was the max in the last 24h?" and I'll query real data if the backend is connected.`;
+      }
+    },
+    {
+      id: 'normal', chip: 'Is this normal?',
+      patterns: [/is\s+this\s+normal|anomal|unusual|expected|baseline/i],
+      action: () => {
+        const msgs = {
+          spike: "Those spikes look like they could be incidents — the baseline is low and then it jumps sharply. That pattern is worth an anomaly monitor.\n\nWant me to help you set one up?",
+          business_hours: "Looks completely normal — classic business hours traffic. It ramps up in the morning, peaks mid-day, then drops off. No anomalies here.\n\nIf you're worried about the overnight floor rising, that'd be worth monitoring.",
+          random_spikes: "The intermittent spikes are a yellow flag. If they're expected (e.g. scheduled jobs), you're fine. If not, you should alert on them.\n\nWant me to set up a threshold alert for when this exceeds its baseline?",
+          mostly_one: "Looks healthy — the metric is at its expected value almost the entire time with only brief dips. Those dips are very short, likely under a minute each.\n\nIf you want to alert on them, an SLO monitor is the right tool here.",
+          increasing: "This is trending upward over time — that's a flag. It could be expected growth, a leak, or accumulation. Worth investigating before it becomes a problem.\n\nWant me to check how long it's been trending up, or set a capacity alert?",
+          decreasing: "This is declining steadily. Depending on the metric, that could be good (memory freeing up) or bad (requests dropping). What's the expected behavior here?",
+          stable: "Very stable — this metric barely moves. That's either very healthy, or the signal is too coarse to be useful. Is this behaving as expected for you?",
+          variable: "Normal variability — nothing jumps out as an anomaly in this window. The variance looks consistent with typical workload fluctuation.",
+          sinusoidal: "The regular sine-wave pattern looks intentional — probably temperature cycling or a device on a schedule. That's expected for this type of sensor metric.",
+          sawtooth: "The sawtooth pattern is from periodic resets — expected behavior. The drops are clean and regular, which means they're controlled, not crashes.",
+        };
+        return (msgs[currentCfg.shape] || "The metric looks within normal ranges based on historical submitted values.") +
+          "\n\nAnything specific you want me to dig into?";
+      }
+    },
+    {
+      id: 'explain', chip: 'Explain this metric',
+      patterns: [/explain|what\s+is|what\s+does|describe|tell\s+me\s+about|what.*measure/i],
+      action: () => `**${currentCfg.metric}**\n\n${currentCfg.description}\n\nType: \`${currentCfg.type}\`\nDefault aggregation: \`${currentCfg.defaultAgg}\`\nAvailable tags: ${currentCfg.allTags.map(t => `\`${t}\``).join(', ')}\n\nWant me to show you related metrics, or explain what the current aggregation (\`${currentCfg.selectedAgg}\`) means for this type?`
+    },
+    {
+      id: 'monitor',
+      patterns: [/create.*monitor|set.*alert|new\s+monitor|alert\s+me|set up.*alert/i],
+      action: () => {
+        const q = encodeURIComponent(buildDDQuery(currentCfg));
+        const url = `https://app.datadoghq.com/monitors/create?query=${q}`;
+        // Return reply text + signal for the UI to render an action button
+        return `__MONITOR_FLOW__:${url}`;
+      }
+    },
+    {
+      id: 'switch_cpu',
+      patterns: [/switch.*cpu|show.*cpu|cpu\s+metric/i],
+      action: () => { setTimeout(() => navigate('cpu utilization by availability zone'), 1000); return "Switching to CPU utilization — I'll load the chart now."; }
+    },
+    {
+      id: 'switch_memory',
+      patterns: [/switch.*memory|show.*memory|memory\s+metric/i],
+      action: () => { setTimeout(() => navigate('memory usage by availability zone'), 1000); return "Switching to memory usage — loading now."; }
+    },
+    {
+      id: 'switch_checkout',
+      patterns: [/switch.*checkout|show.*checkout|checkout\s+fail/i],
+      action: () => { setTimeout(() => navigate('checkout failures by availability zone'), 1000); return "Switching to checkout failures — loading now."; }
+    },
+    {
+      id: 'time_1h',
+      patterns: [/last\s+hour|past\s+hour|\b1\s*h\b/i],
+      action: () => { document.getElementById('chartMeta').textContent = `Past 1h · 1-min intervals · ${currentCfg.yLabel}`; pulseChartPanel(); showChartToast('Time range: Last 1 hour'); return "Showing the last **1 hour** at 1-minute resolution. Good for investigating something happening right now."; }
+    },
+    {
+      id: 'time_7d',
+      patterns: [/last\s+week|past\s+week|\b7\s*d\b/i],
+      action: () => { document.getElementById('chartMeta').textContent = `Past 7d · 1-hour intervals · ${currentCfg.yLabel}`; pulseChartPanel(); showChartToast('Time range: Last 7 days'); return "Zoomed out to the last **7 days** at hourly resolution. Good for spotting weekly patterns or slow trends."; }
+    },
+  ];
+
+  const CHIP_IDS = ['compare_week', 'compare_yesterday', 'agg_p99', 'group_host', 'peak', 'normal', 'explain'];
+
+  // ── Action execution (from server) ────────────────────────────────────────
+  function executeServerActions(actions) {
+    if (!actions || !actions.length) return;
+    actions.forEach(a => {
+      if (!a || !a.type) return;
+      switch (a.type) {
+        case 'set_agg':
+          if (a.value && currentCfg.aggs.includes(a.value)) selectAgg(a.value);
+          break;
+        case 'set_group':
+          if (a.value && currentCfg.allTags.includes(a.value)) selectTag(a.value);
+          else if (a.value === null || a.value === 'none') selectTag(null);
+          break;
+        case 'add_comparison':
+          currentCfg = { ...currentCfg, comparison: true, comparisonLabel: a.label || 'comparison' };
+          renderChartOnly(`Comparison: ${a.label || 'period'} added`);
+          break;
+        case 'remove_comparison':
+          currentCfg = { ...currentCfg, comparison: false };
+          renderChartOnly('Comparison removed');
+          break;
+        case 'open_url':
+          // rendered as button inside the chat bubble — handled in addBotMsg
+          break;
+      }
+    });
+  }
+
+  function initChat(cfg) {
+    const el = document.getElementById('chatHistory');
+    el.dataset.initialized = '1';
+    el.innerHTML = '';
+    const intro = `Hey! I'm **Bits**. I'm looking at **${cfg.metric}** with you.\n\n${cfg.description}\n\nAsk me anything — I can change the graph, query live Datadog data, walk you through creating a monitor, and more.`;
+    addBotMsg(intro);
+    renderChips();
+  }
+
+  function renderChips() {
+    const chipsEl = document.getElementById('chatChips');
+    chipsEl.innerHTML = CHAT_INTENTS
+      .filter(i => i.chip && CHIP_IDS.includes(i.id))
+      .map((i, idx) => `<span class="chip" style="animation-delay:${idx * 55}ms" onclick="chipClick('${i.id}')">${i.chip}</span>`)
+      .join('');
+  }
+
+  function chipClick(id) {
+    const intent = CHAT_INTENTS.find(i => i.id === id);
+    if (!intent) return;
+    addUserMsg(intent.chip);
+    const response = intent.action();
+    if (response) showTypingThen(response);
+  }
+
+  function addUserMsg(text) {
+    const el = document.getElementById('chatHistory');
+    const div = document.createElement('div');
+    div.className = 'chat-msg user';
+    div.innerHTML = `<div class="chat-bubble">${escHtml(text)}</div>`;
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function addBotMsg(text, actions) {
+    // Handle special monitor flow signal
+    if (typeof text === 'string' && text.startsWith('__MONITOR_FLOW__:')) {
+      const url = text.split(':').slice(1).join(':');
+      text = `Sure, let's set up a monitor for **${currentCfg.metric}**.\n\nHere's what I'll configure:\n- **Query:** \`${buildDDQuery(currentCfg)}\`\n- **Type:** Threshold alert\n\nI've pre-filled the monitor create page with your current query. Click below to open it in Datadog and set your threshold + notification channels:`;
+      actions = [{ type: 'open_url', url, label: 'Create Monitor in Datadog →' }];
+    }
+
+    const el = document.getElementById('chatHistory');
+    const div = document.createElement('div');
+    div.className = 'chat-msg bot';
+
+    let html = `<div class="chat-bubble">${formatBotText(text)}`;
+
+    // Inline code blocks
+    html = html.replace(/`([^`]+)`/g, '<code style="background:#1a1f32;padding:1px 5px;border-radius:3px;font-family:monospace;font-size:11px;">$1</code>');
+
+    // open_url actions → render as a button inside the bubble
+    const urlActions = (actions || []).filter(a => a && a.type === 'open_url');
+    if (urlActions.length) {
+      html += urlActions.map(a =>
+        `<br><br><a href="${escHtml(a.url)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;margin-top:4px;padding:6px 12px;background:#7c3aed;color:#fff;border-radius:7px;font-size:12px;font-weight:600;text-decoration:none;transition:background 0.15s;" onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='#7c3aed'">${escHtml(a.label || 'Open in Datadog')} ↗</a>`
+      ).join('');
+    }
+
+    html += '</div>';
+    div.innerHTML = html;
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
+    return div;
+  }
+
+  function formatBotText(text) {
+    return escHtml(text)
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function showTypingThen(response, actions) {
+    const el = document.getElementById('chatHistory');
+    const typing = document.createElement('div');
+    typing.className = 'chat-msg bot';
+    typing.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+    el.appendChild(typing);
+    el.scrollTop = el.scrollHeight;
+    setTimeout(() => {
+      if (el.contains(typing)) el.removeChild(typing);
+      addBotMsg(response, actions);
+    }, 600 + Math.random() * 350);
+  }
+
+  const CHAT_SERVER = 'http://localhost:7788';
+  let serverAvailable = null; // null=unknown, true, false
+  const chatHistory = []; // [{role, content}] for server context
+
+  async function checkServer() {
+    if (serverAvailable !== null) return serverAvailable;
+    try {
+      const r = await fetch(`${CHAT_SERVER}/api/health`, { signal: AbortSignal.timeout(1500) });
+      serverAvailable = r.ok;
+    } catch { serverAvailable = false; }
+    return serverAvailable;
+  }
+
+  function sendChatMsg() {
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    addUserMsg(msg);
+
+    // Local intents handle graph mutations instantly (no server round-trip needed)
+    const ml = msg.toLowerCase();
+    for (const intent of CHAT_INTENTS) {
+      if (intent.patterns && intent.patterns.some(p => p.test(ml))) {
+        const reply = intent.action(msg);
+        if (reply) {
+          chatHistory.push({ role: 'user', content: msg });
+          chatHistory.push({ role: 'assistant', content: reply });
+          showTypingThen(reply);
+        }
+        return;
+      }
+    }
+
+    // Everything else → Claude + Datadog MCP for real data
+    sendToServer(msg);
+  }
+
+  async function sendToServer(msg) {
+    const available = await checkServer();
+    if (!available) {
+      const reply = localFallback(msg);
+      chatHistory.push({ role: 'user', content: msg });
+      chatHistory.push({ role: 'assistant', content: reply });
+      showTypingThen(reply);
+      return;
+    }
+
+    const el = document.getElementById('chatHistory');
+    const typing = document.createElement('div');
+    typing.className = 'chat-msg bot';
+    typing.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+    el.appendChild(typing);
+    el.scrollTop = el.scrollHeight;
+
+    try {
+      const context = {
+        metric: currentCfg.metric,
+        description: currentCfg.description,
+        type: currentCfg.type,
+        selectedAgg: currentCfg.selectedAgg,
+        selectedGroupBy: currentCfg.selectedGroupBy,
+        filter: currentCfg.defaultFilter,
+        availableTags: currentCfg.allTags,
+        yMin: currentCfg.yMin,
+        yMax: currentCfg.yMax,
+        yLabel: currentCfg.yLabel,
+        comparison: currentCfg.comparison || false,
+        comparisonLabel: currentCfg.comparisonLabel || null,
+        ddQuery: buildDDQuery(currentCfg),
+      };
+
+      const r = await fetch(`${CHAT_SERVER}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg, history: chatHistory.slice(-10), context }),
+        signal: AbortSignal.timeout(30000),
+      });
+
+      if (el.contains(typing)) el.removeChild(typing);
+      const data = await r.json();
+      const reply = data.reply || data.error || 'No response from server.';
+      const actions = data.actions || [];
+      chatHistory.push({ role: 'user', content: msg });
+      chatHistory.push({ role: 'assistant', content: reply });
+      // Execute non-url actions first (they update the graph)
+      executeServerActions(actions.filter(a => a.type !== 'open_url'));
+      addBotMsg(reply, actions);
+    } catch (err) {
+      if (el.contains(typing)) el.removeChild(typing);
+      const reply = localFallback(msg);
+      chatHistory.push({ role: 'user', content: msg });
+      chatHistory.push({ role: 'assistant', content: reply });
+      addBotMsg(reply);
+    }
+  }
+
+  function localFallback(msg) {
+    const ml = msg.toLowerCase();
+    if (ml.length > 3) {
+      const parsed = parseQuery(msg);
+      if (parsed && parsed.metric !== currentCfg.metric) {
+        setTimeout(() => navigate(msg), 800);
+        return `Switching to a query for "${msg}"...`;
+      }
+    }
+    return `I can help with:\n• **Compare to last week/yesterday**\n• **Break down by host/service/region**\n• **Change aggregation** (avg, max, p95, p99)\n• **"What's the peak?"** or **"Is this normal?"**\n• **"Explain this metric"**\n\nFor live Datadog data, start the backend:\n\`python3 server.py\``;
+  }
+
+  document.getElementById('chatInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendChatMsg();
+  });
+
+  window.addEventListener('resize', () => { if (currentCfg) drawChart(currentCfg); });
+
+  // ── Init ─────────────────────────────────────────────────────────────────
+  const q = new URLSearchParams(window.location.search).get('q') || 'checkout failures by availability zone';
+  document.getElementById('searchInput').value = q;
+  const cfg = parseQuery(q);
+  renderPage({ ...cfg, selectedAgg: cfg.defaultAgg, selectedGroupBy: cfg.defaultGroupBy });
+  </script>
+</body>
+</html>

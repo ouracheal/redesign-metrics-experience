@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metrics – Cost Optimization</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f8; color: #1a1a2e;
+      height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .nav {
+      display: flex; align-items: center; background: #fff;
+      border-bottom: 1px solid #e5e5ed; padding: 0 24px; height: 52px; flex-shrink: 0;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; color: #1a1a2e; margin-right: 28px; }
+    .nav-logo svg { color: #7c3aed; }
+    .nav-tabs { display: flex; align-items: stretch; height: 100%; flex: 1; }
+    .nav-tab { display: flex; align-items: center; padding: 0 16px; font-size: 14px; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+    .nav-tab:hover { color: #1a1a2e; }
+    .nav-tab.active { color: #7c3aed; border-bottom: 2px solid #7c3aed; font-weight: 500; }
+    .nav-tab.more { font-size: 18px; letter-spacing: 2px; color: #9ca3af; }
+    .nav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+    .btn-outline { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; font-size: 13px; color: #374151; cursor: pointer; white-space: nowrap; }
+    .btn-time { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; font-size: 13px; color: #374151; cursor: pointer; }
+    .btn-tz { display: flex; flex-direction: column; padding: 4px 14px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; cursor: pointer; }
+    .btn-tz .tz-label { font-size: 11px; color: #6b7280; }
+    .btn-tz .tz-value { font-size: 13px; color: #374151; font-weight: 500; }
+
+    .subbar { display: flex; align-items: center; background: #fff; border-bottom: 1px solid #e5e5ed; padding: 0 24px; height: 48px; gap: 12px; flex-shrink: 0; }
+    .back-btn { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #374151; cursor: pointer; text-decoration: none; margin-right: auto; }
+    .back-btn:hover { color: #7c3aed; }
+    .btn-save { padding: 6px 18px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; font-size: 13px; font-weight: 500; color: #374151; cursor: pointer; }
+    .btn-primary { padding: 7px 18px; border: none; border-radius: 6px; background: #7c3aed; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; }
+    .btn-primary:hover { background: #6d28d9; }
+    .legacy-link { font-size: 13px; color: #6b7280; cursor: pointer; white-space: nowrap; }
+
+    .search-bar-wrap { background: #fff; border-bottom: 1px solid #e5e5ed; padding: 10px 24px; flex-shrink: 0; }
+    .search-bar { display: flex; align-items: center; border: 2px solid #7c3aed; border-radius: 8px; padding: 9px 14px; gap: 10px; background: #fff; }
+    .search-bar input { flex: 1; border: none; outline: none; font-size: 14px; color: #374151; background: transparent; }
+    .btn-ai { display: flex; align-items: center; gap: 5px; background: #7c3aed; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* Sidebar */
+    .filters { width: 260px; flex-shrink: 0; background: #fff; border-right: 1px solid #e5e7eb; overflow-y: auto; padding: 16px 0; }
+    .filter-section-header { display: flex; align-items: center; gap: 6px; padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #374151; }
+    .filter-section-header:hover { background: #f9fafb; }
+    .filter-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 16px 7px 36px; cursor: pointer; }
+    .filter-item:hover { background: #f9fafb; }
+    .filter-left { display: flex; align-items: center; gap: 8px; }
+    .checkbox { width: 15px; height: 15px; border: 1.5px solid #7c3aed; border-radius: 3px; background: #7c3aed; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .filter-label { font-size: 13px; color: #374151; }
+    .filter-count { font-size: 12px; color: #9ca3af; }
+
+    /* Content */
+    .content-panel { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+    /* Volume Overview */
+    .volume-overview-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .volume-overview-title { font-size: 18px; font-weight: 700; color: #111827; }
+    .hide-graphs-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #7c3aed; cursor: pointer; border: none; background: none; }
+    .hide-graphs-btn svg { color: #7c3aed; }
+    .hide-graphs-btn:hover { text-decoration: underline; }
+
+    .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .chart-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; }
+    .chart-card-title { font-size: 14px; font-weight: 700; color: #111827; margin-bottom: 4px; }
+    .chart-card-desc { font-size: 12px; color: #6b7280; margin-bottom: 16px; }
+    .chart-card-desc a { color: #7c3aed; text-decoration: none; }
+    .chart-card-desc a:hover { text-decoration: underline; }
+    .chart-area { height: 160px; position: relative; }
+    .chart-timestamp { font-size: 11px; color: #9ca3af; text-align: right; margin-top: 4px; }
+
+    /* Bar chart SVG */
+    .chart-svg { width: 100%; height: 160px; }
+
+    /* Controls row */
+    .controls-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .search-metrics-input { display: flex; align-items: center; gap: 8px; border: 1px solid #e5e7eb; border-radius: 7px; padding: 8px 12px; background: #fff; flex: 1; }
+    .search-metrics-input input { border: none; outline: none; font-size: 13px; color: #374151; background: transparent; width: 100%; }
+    .search-metrics-input svg { color: #9ca3af; flex-shrink: 0; }
+    .filter-tag-input { display: flex; align-items: center; gap: 8px; border: 1px solid #e5e7eb; border-radius: 7px; padding: 8px 12px; background: #fff; flex: 1; }
+    .filter-tag-input input { border: none; outline: none; font-size: 13px; color: #374151; background: transparent; width: 100%; }
+    .filter-tag-input svg { color: #9ca3af; flex-shrink: 0; }
+
+    .table-meta-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .hide-controls-btn { font-size: 13px; color: #7c3aed; cursor: pointer; display: flex; align-items: center; gap: 5px; border: none; background: none; }
+    .hide-controls-btn:hover { text-decoration: underline; }
+    .showing-label { font-size: 13px; color: #374151; }
+    .btn-export { padding: 7px 14px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; font-size: 13px; color: #374151; cursor: pointer; }
+    .btn-export:hover { background: #f9fafb; }
+
+    /* Table */
+    .metrics-table { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+    th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 600; color: #6b7280; letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; cursor: pointer; user-select: none; }
+    th:hover { color: #374151; }
+    th.sorted { color: #7c3aed; }
+    td { padding: 12px 16px; font-size: 13px; color: #374151; border-bottom: 1px solid #f3f4f6; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #faf9ff; }
+    .metric-name { font-family: "SF Mono", "Fira Code", monospace; font-size: 12.5px; color: #111827; }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+    .badge-gauge        { background: #ede9fe; color: #7c3aed; }
+    .badge-count        { background: #d1fae5; color: #065f46; }
+    .badge-histogram    { background: #fef3c7; color: #92400e; }
+    .badge-rate         { background: #fee2e2; color: #991b1b; }
+    .badge-distribution { background: #dbeafe; color: #1e40af; }
+
+    .vol-bar-wrap { display: flex; align-items: center; gap: 10px; }
+    .vol-bar-bg { flex: 1; height: 6px; background: #f3f4f6; border-radius: 3px; min-width: 80px; }
+    .vol-bar-fill { height: 6px; background: #7c3aed; border-radius: 3px; }
+    .vol-value { font-size: 12px; color: #374151; white-space: nowrap; font-weight: 500; min-width: 48px; text-align: right; }
+
+    .tags-cell { font-size: 12px; color: #6b7280; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .help-btn { position: fixed; bottom: 24px; right: 24px; width: 36px; height: 36px; border-radius: 50%; background: #fff; border: 1px solid #d1d5db; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #6b7280; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+
+  <!-- Top Nav -->
+  <nav class="nav">
+    <div class="nav-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Metrics
+    </div>
+    <div class="nav-tabs">
+      <div class="nav-tab">Overview</div>
+      <div class="nav-tab active">Explorer</div>
+      <div class="nav-tab">Summary</div>
+      <div class="nav-tab">Volume</div>
+      <div class="nav-tab more">···</div>
+    </div>
+    <div class="nav-right">
+      <button class="btn-outline">Configure Metrics ▾</button>
+      <button class="btn-time">1h</button>
+      <button class="btn-tz">
+        <span class="tz-label">UTC-05:00</span>
+        <span class="tz-value">Past 1 Hour ▾</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Sub Bar -->
+  <div class="subbar">
+    <a class="back-btn" href="metrics-explorer.html">← Back to search</a>
+    <button class="btn-outline">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Last 24h ▾
+    </button>
+    <button class="btn-save">Save</button>
+    <button class="btn-primary">Create Monitor</button>
+    <span class="legacy-link">Show legacy experience</span>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-bar-wrap">
+    <div class="search-bar">
+      <span style="color:#9ca3af;flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <input type="text" id="topSearch" placeholder="Search metrics by name or tag…" value="Which metrics are consuming the most volume and should be optimized?" />
+      <button class="btn-ai">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+        AI
+      </button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Sidebar Filters -->
+    <aside class="filters">
+      <div>
+        <div class="filter-section-header">▼ Configuration</div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">All tags</span>
+          </div><span class="filter-count">877</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Configured tags</span>
+          </div><span class="filter-count">1</span>
+        </div>
+      </div>
+      <div>
+        <div class="filter-section-header">▼ Percentiles</div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Enabled percentiles</span>
+          </div><span class="filter-count">26</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Disabled percentiles</span>
+          </div><span class="filter-count">62</span>
+        </div>
+      </div>
+      <div>
+        <div class="filter-section-header">▼ Historical Metrics</div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Enabled historical metrics</span>
+          </div><span class="filter-count">1</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Disabled historical metrics</span>
+          </div><span class="filter-count">877</span>
+        </div>
+      </div>
+      <div>
+        <div class="filter-section-header">▼ Query Activity</div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Queried in 30 days</span>
+          </div>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Not queried in 30 days</span>
+          </div><span class="filter-count">878</span>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Not queried in 60 days</span>
+          </div>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Not queried in 90 days</span>
+          </div>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Not queried in 120 days</span>
+          </div>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Not queried in 150 days</span>
+          </div>
+        </div>
+        <div class="filter-item">
+          <div class="filter-left">
+            <div class="checkbox"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div>
+            <span class="filter-label">Not queried in 180 days</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Content Panel -->
+    <div class="content-panel">
+
+      <!-- Volume Overview -->
+      <div class="volume-overview-header">
+        <span class="volume-overview-title">Volume Overview</span>
+        <button class="hide-graphs-btn" onclick="toggleGraphs(this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          Hide Graphs
+        </button>
+      </div>
+
+      <div class="charts-grid" id="chartsGrid">
+        <!-- Indexed Custom Metrics Chart -->
+        <div class="chart-card">
+          <div class="chart-card-title">Total Estimated Indexed Custom Metrics</div>
+          <div class="chart-card-desc">The metrics and tags that remain queryable in Datadog. <a href="#">Docs</a> &#8599;</div>
+          <div class="chart-area">
+            <svg class="chart-svg" id="indexedChart" viewBox="0 0 560 160" preserveAspectRatio="none"></svg>
+          </div>
+          <div class="chart-timestamp" id="indexedTs"></div>
+        </div>
+        <!-- Ingested Custom Metrics Chart -->
+        <div class="chart-card">
+          <div class="chart-card-title">Total Estimated Ingested Custom Metrics</div>
+          <div class="chart-card-desc">The original volume of all metrics configured with MWL. <a href="#">Docs</a> &#8599;</div>
+          <div class="chart-area">
+            <svg class="chart-svg" id="ingestedChart" viewBox="0 0 560 160" preserveAspectRatio="none"></svg>
+          </div>
+          <div class="chart-timestamp" id="ingestedTs"></div>
+        </div>
+      </div>
+
+      <!-- Controls Row -->
+      <div class="controls-row">
+        <div class="search-metrics-input">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search metrics" id="metricSearch" oninput="renderTable()" />
+        </div>
+        <div class="filter-tag-input">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Filter by Tag Value" />
+        </div>
+      </div>
+
+      <div class="table-meta-row">
+        <button class="hide-controls-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Hide Controls
+        </button>
+        <span class="showing-label" id="showingLabel">Showing 1–50 of 878 metrics by estimated custom metrics</span>
+        <button class="btn-export">Export as CSV</button>
+      </div>
+
+      <!-- Metrics Table -->
+      <div class="metrics-table">
+        <table>
+          <thead>
+            <tr>
+              <th class="sorted">↕ METRIC NAME</th>
+              <th>TYPE</th>
+              <th class="sorted" style="color:#7c3aed;">↓ EST. CUSTOM METRICS</th>
+              <th>TAGS</th>
+              <th>LAST REPORTED</th>
+            </tr>
+          </thead>
+          <tbody id="metricsBody"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="help-btn">?</div>
+
+  <script>
+    // Metrics data with volume (estimated custom metrics)
+    const METRICS = [
+      { name: 'trace.rack.request.duration.by.service.99p',      type: 'gauge',        indexedVol: 148200, ingestedVol: 2950000, tags: 'env:prod, service:web-store, http.status_code, resource_name', lastSeen: '1 min ago' },
+      { name: 'trace.rack.request.duration.by.service.95p',      type: 'gauge',        indexedVol: 142400, ingestedVol: 2840000, tags: 'env:prod, service:web-store, http.status_code, resource_name', lastSeen: '1 min ago' },
+      { name: 'trace.rack.request.duration.by.service.50p',      type: 'gauge',        indexedVol: 138600, ingestedVol: 2770000, tags: 'env:prod, service:web-store, http.status_code, resource_name', lastSeen: '1 min ago' },
+      { name: 'trace.rack.request.duration',                     type: 'gauge',        indexedVol: 131800, ingestedVol: 2636000, tags: 'env:prod, service:web-store, http.status_code, resource_name', lastSeen: '1 min ago' },
+      { name: 'azure.devices_iothubs.d2c.telemetry.egress.dropped', type: 'gauge',     indexedVol: 121000, ingestedVol: 2420000, tags: 'region:eastus, hub_name, protocol', lastSeen: '2 mins ago' },
+      { name: 'azure.devices_iothubs.devices.total_devices',     type: 'gauge',        indexedVol: 118400, ingestedVol: 2368000, tags: 'region:westus, hub_name', lastSeen: '2 mins ago' },
+      { name: 'azure.devices_iothubs.devices.connected_devices.all_protocol', type: 'gauge', indexedVol: 114200, ingestedVol: 2284000, tags: 'region:eastus, hub_name', lastSeen: '2 mins ago' },
+      { name: 'shopist.trace.rack.request.latency.50p',          type: 'gauge',        indexedVol: 108800, ingestedVol: 2176000, tags: 'env:prod, service, resource_name, http.status_code', lastSeen: '1 min ago' },
+      { name: 'azure.devices_iothubs.d2c.twin.read.failure',     type: 'gauge',        indexedVol: 102600, ingestedVol: 2052000, tags: 'region:eastus, hub_name', lastSeen: '3 mins ago' },
+      { name: 'azure.devices_iothubs.d2c.twin.update.failure',   type: 'gauge',        indexedVol: 98400,  ingestedVol: 1968000, tags: 'region:westus, hub_name', lastSeen: '3 mins ago' },
+      { name: 'shopist.user.login_attempt.failure_count',        type: 'count',        indexedVol: 94200,  ingestedVol: 1884000, tags: 'user_ip_address, user_id, env:prod', lastSeen: '10 secs ago' },
+      { name: 'shopist.user.login_attempt.success_count',        type: 'count',        indexedVol: 91800,  ingestedVol: 1836000, tags: 'user_ip_address, user_id, env:prod', lastSeen: '10 secs ago' },
+      { name: 'azure.devices_iothubs.c2d.twin.update.failure',   type: 'gauge',        indexedVol: 88600,  ingestedVol: 1772000, tags: 'region:eastus, hub_name', lastSeen: '3 mins ago' },
+      { name: 'azure.devices_iothubs.d2c.twin.queries.failure',  type: 'gauge',        indexedVol: 85400,  ingestedVol: 1708000, tags: 'region:eastus, hub_name', lastSeen: '3 mins ago' },
+      { name: 'shopist.scenarios.checkout.failures',             type: 'rate',         indexedVol: 82200,  ingestedVol: 1644000, tags: 'env:prod, checkout_step, user_segment', lastSeen: '1 min ago' },
+      { name: 'shopist.synthesizer.errors',                      type: 'distribution', indexedVol: 78000,  ingestedVol: 1560000, tags: 'env:prod, error_type', lastSeen: '30 secs ago' },
+      { name: 'trace.mongo.cmd.duration',                        type: 'gauge',        indexedVol: 74800,  ingestedVol: 1496000, tags: 'env:prod, service:web-store-mongo, resource_name', lastSeen: '1 min ago' },
+      { name: 'shopist.trace.mongo.query.latency.50p',           type: 'gauge',        indexedVol: 71600,  ingestedVol: 1432000, tags: 'env:prod, operation, collection', lastSeen: '1 min ago' },
+      { name: 'mongodb.opcounters.queryps',                      type: 'gauge',        indexedVol: 68400,  ingestedVol: 1368000, tags: 'env:prod, cluster-name:prod-gke-shopist-a-us-west1', lastSeen: '1 min ago' },
+      { name: 'mongodb.globallock.activeclients.readers',        type: 'gauge',        indexedVol: 65200,  ingestedVol: 1304000, tags: 'env:prod, cluster-name:prod-gke-shopist-a-us-west1', lastSeen: '1 min ago' },
+      { name: 'system.cpu.user',                                 type: 'gauge',        indexedVol: 62000,  ingestedVol: 1240000, tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '2 mins ago' },
+      { name: 'system.cpu.system',                               type: 'gauge',        indexedVol: 59800,  ingestedVol: 1196000, tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '2 mins ago' },
+      { name: 'system.net.bytes_rcvd',                           type: 'gauge',        indexedVol: 57600,  ingestedVol: 1152000, tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '2 mins ago' },
+      { name: 'system.net.bytes_sent',                           type: 'gauge',        indexedVol: 55400,  ingestedVol: 1108000, tags: 'type:iot, availability-zone:us-east1-c', lastSeen: '2 mins ago' },
+      { name: 'mongodb.metrics.cursor.open.total',               type: 'gauge',        indexedVol: 53200,  ingestedVol: 1064000, tags: 'env:prod, cluster-name:prod-gke-shopist-a-us-west1', lastSeen: '1 min ago' },
+      { name: 'shopist.funnel.pct_carts_abandoned',              type: 'gauge',        indexedVol: 51000,  ingestedVol: 1020000, tags: 'env:prod', lastSeen: '1 min ago' },
+      { name: 'shopist.funnel.avg_time_to_checkout',             type: 'gauge',        indexedVol: 48800,  ingestedVol: 976000,  tags: 'env:prod', lastSeen: '1 min ago' },
+      { name: 'shopist.memcache.bytes_written_rate',             type: 'gauge',        indexedVol: 46600,  ingestedVol: 932000,  tags: 'env:prod', lastSeen: '2 mins ago' },
+      { name: 'shopist.memcache.get_hits_rate',                  type: 'gauge',        indexedVol: 44400,  ingestedVol: 888000,  tags: 'env:prod', lastSeen: '2 mins ago' },
+      { name: 'shopist.memcache.get_misses_rate',                type: 'gauge',        indexedVol: 42200,  ingestedVol: 844000,  tags: 'env:prod', lastSeen: '2 mins ago' },
+      { name: 'device.actual_temperature',                       type: 'gauge',        indexedVol: 40000,  ingestedVol: 800000,  tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '30 secs ago' },
+      { name: 'device.target_temperature',                       type: 'gauge',        indexedVol: 38800,  ingestedVol: 776000,  tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '30 secs ago' },
+      { name: 'device.cpu_temperature',                          type: 'gauge',        indexedVol: 37600,  ingestedVol: 752000,  tags: 'type:iot, availability-zone:us-east1-c', lastSeen: '30 secs ago' },
+      { name: 'device.tank_temperature',                         type: 'gauge',        indexedVol: 36400,  ingestedVol: 728000,  tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '30 secs ago' },
+      { name: 'device.flow_rate',                                type: 'gauge',        indexedVol: 35200,  ingestedVol: 704000,  tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '30 secs ago' },
+      { name: 'device.tank_pressure',                            type: 'gauge',        indexedVol: 34000,  ingestedVol: 680000,  tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '30 secs ago' },
+      { name: 'device.wlan_signal_dbm',                          type: 'gauge',        indexedVol: 32800,  ingestedVol: 656000,  tags: 'type:iot, availability-zone:us-east1-c', lastSeen: '1 min ago' },
+      { name: 'mongodb.globallock.currentqueue.readers',         type: 'gauge',        indexedVol: 31600,  ingestedVol: 632000,  tags: 'env:prod, cluster-name:prod-gke-shopist-a-us-west1', lastSeen: '2 mins ago' },
+      { name: 'system.mem.total',                                type: 'gauge',        indexedVol: 30400,  ingestedVol: 608000,  tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '2 mins ago' },
+      { name: 'system.mem.usable',                               type: 'gauge',        indexedVol: 29200,  ingestedVol: 584000,  tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '2 mins ago' },
+      { name: 'system.disk.total',                               type: 'gauge',        indexedVol: 28000,  ingestedVol: 560000,  tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '3 mins ago' },
+      { name: 'system.disk.free',                                type: 'gauge',        indexedVol: 26800,  ingestedVol: 536000,  tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '3 mins ago' },
+      { name: 'system.disk.in_use',                              type: 'gauge',        indexedVol: 25600,  ingestedVol: 512000,  tags: 'type:iot, availability-zone:us-east1-c', lastSeen: '3 mins ago' },
+      { name: 'system.swap.used',                                type: 'gauge',        indexedVol: 24400,  ingestedVol: 488000,  tags: 'type:iot, availability-zone:us-east1-c', lastSeen: '2 mins ago' },
+      { name: 'system.swap.free',                                type: 'gauge',        indexedVol: 23200,  ingestedVol: 464000,  tags: 'type:iot, availability-zone:us-east1-c', lastSeen: '2 mins ago' },
+      { name: 'system.io.await',                                 type: 'gauge',        indexedVol: 22000,  ingestedVol: 440000,  tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '3 mins ago' },
+      { name: 'system.load.1',                                   type: 'gauge',        indexedVol: 20800,  ingestedVol: 416000,  tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '2 mins ago' },
+      { name: 'system.cpu.iowait',                               type: 'gauge',        indexedVol: 19600,  ingestedVol: 392000,  tags: 'type:iot, availability-zone:us-east1-c', lastSeen: '2 mins ago' },
+      { name: 'system.cpu.idle',                                 type: 'gauge',        indexedVol: 18400,  ingestedVol: 368000,  tags: 'type:iot, availability-zone:us-west3-a', lastSeen: '2 mins ago' },
+      { name: 'shopist.mongodb.usage.total.countps',             type: 'gauge',        indexedVol: 17200,  ingestedVol: 344000,  tags: 'env:prod', lastSeen: '2 mins ago' },
+    ];
+
+    const maxIndexed = Math.max(...METRICS.map(m => m.indexedVol));
+
+    function fmtVol(v) {
+      if (v >= 1000000) return (v / 1000000).toFixed(2) + 'M';
+      if (v >= 1000)    return (v / 1000).toFixed(1) + 'k';
+      return v.toString();
+    }
+
+    function renderTable() {
+      const q1 = (document.getElementById('metricSearch').value || '').toLowerCase().trim();
+      const q2 = (document.getElementById('topSearch').value || '').toLowerCase().trim();
+      // top bar: ignore the default prompt text
+      const topIsDefault = q2 === 'which metrics are consuming the most volume and should be optimized?';
+      const q = q1 || (topIsDefault ? '' : q2);
+      const filtered = METRICS.filter(m => !q || m.name.toLowerCase().includes(q) || m.tags.toLowerCase().includes(q));
+      const tbody = document.getElementById('metricsBody');
+      const label = document.getElementById('showingLabel');
+      const n = filtered.length;
+
+      label.textContent = `Showing 1\u2013${n} of ${n} metric${n !== 1 ? 's' : ''} by estimated custom metrics`;
+
+      tbody.innerHTML = filtered.map(m => {
+        const pct = Math.round((m.indexedVol / maxIndexed) * 100);
+        return `<tr>
+          <td><span class="metric-name">${m.name}</span></td>
+          <td><span class="badge badge-${m.type}">${m.type}</span></td>
+          <td>
+            <div class="vol-bar-wrap">
+              <div class="vol-bar-bg"><div class="vol-bar-fill" style="width:${pct}%"></div></div>
+              <span class="vol-value">${fmtVol(m.indexedVol)}</span>
+            </div>
+          </td>
+          <td class="tags-cell">${m.tags}</td>
+          <td style="font-size:13px;color:#6b7280;white-space:nowrap;">${m.lastSeen}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // Draw bar charts
+    function drawBarChart(svgId, values, color, yMax) {
+      const svg = document.getElementById(svgId);
+      const W = 560, H = 150, PAD_L = 36, PAD_B = 20;
+      const chartW = W - PAD_L - 4;
+      const chartH = H - PAD_B;
+      const n = values.length;
+      const barW = Math.max(2, (chartW / n) - 1);
+      const gap = (chartW / n) - barW;
+
+      // Y axis labels
+      const yLabels = [0, yMax * 0.25, yMax * 0.5, yMax * 0.75, yMax];
+      let html = '';
+      yLabels.forEach(v => {
+        const y = chartH - (v / yMax) * chartH;
+        html += `<line x1="${PAD_L}" y1="${y}" x2="${W}" y2="${y}" stroke="#f3f4f6" stroke-width="1"/>`;
+        html += `<text x="${PAD_L - 4}" y="${y + 4}" text-anchor="end" font-size="9" fill="#9ca3af">${fmtVol(v)}</text>`;
+      });
+
+      // Bars
+      values.forEach((v, i) => {
+        const x = PAD_L + i * (barW + gap);
+        const h = (v / yMax) * chartH;
+        const y = chartH - h;
+        html += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="${color}" rx="1"/>`;
+      });
+
+      svg.innerHTML = html;
+
+      // Timestamp
+      const now = new Date();
+      const tsId = svgId.replace('Chart', 'Ts');
+      const el = document.getElementById(tsId);
+      if (el) el.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function generateBarData(n, base, variance) {
+      return Array.from({ length: n }, (_, i) => {
+        const trend = 1 + 0.1 * Math.sin(i / 8);
+        return Math.max(0, base * trend + (Math.random() - 0.4) * variance);
+      });
+    }
+
+    function toggleGraphs(btn) {
+      const grid = document.getElementById('chartsGrid');
+      const isHidden = grid.style.display === 'none';
+      grid.style.display = isHidden ? 'grid' : 'none';
+      btn.innerHTML = isHidden
+        ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Hide Graphs`
+        : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Show Graphs`;
+    }
+
+    // Init
+    const indexedData  = generateBarData(60, 100000, 40000);
+    const ingestedData = generateBarData(60, 2000000, 600000);
+
+    drawBarChart('indexedChart',  indexedData,  '#93c5fd', 160000);
+    drawBarChart('ingestedChart', ingestedData, '#93c5fd', 3000000);
+    renderTable();
+
+    const topSearch = document.getElementById('topSearch');
+    topSearch.addEventListener('input', renderTable);
+    topSearch.addEventListener('keydown', e => { if (e.key === 'Escape') { topSearch.value = ''; renderTable(); } });
+    topSearch.addEventListener('focus', function() {
+      if (this.value === 'Which metrics are consuming the most volume and should be optimized?') {
+        this.value = '';
+      }
+    });
+    topSearch.addEventListener('blur', function() {
+      if (!this.value.trim()) {
+        this.value = 'Which metrics are consuming the most volume and should be optimized?';
+        renderTable();
+      }
+    });
+  </script>
+</body>
+</html>

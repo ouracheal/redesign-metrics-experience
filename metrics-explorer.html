@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metrics Explorer</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f8;
+      color: #1a1a2e;
+    }
+
+    /* ── Top Nav ── */
+    .nav {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border-bottom: 1px solid #e5e5ed;
+      padding: 0 24px;
+      height: 52px;
+      gap: 0;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 15px;
+      color: #1a1a2e;
+      margin-right: 28px;
+      white-space: nowrap;
+    }
+
+    .nav-logo svg {
+      color: #7c3aed;
+    }
+
+    .nav-tabs {
+      display: flex;
+      align-items: stretch;
+      height: 100%;
+      gap: 0;
+      flex: 1;
+    }
+
+    .nav-tab {
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      font-size: 14px;
+      color: #6b7280;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      height: 100%;
+      white-space: nowrap;
+      transition: color 0.15s;
+    }
+
+    .nav-tab:hover {
+      color: #1a1a2e;
+    }
+
+    .nav-tab.active {
+      color: #7c3aed;
+      border-bottom: 2px solid #7c3aed;
+      font-weight: 500;
+    }
+
+    .nav-tab.more {
+      font-size: 18px;
+      letter-spacing: 1px;
+      color: #9ca3af;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .btn-outline {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #fff;
+      font-size: 13px;
+      color: #374151;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+
+    .btn-outline:hover {
+      background: #f9fafb;
+    }
+
+    .btn-outline .chevron {
+      font-size: 10px;
+      color: #9ca3af;
+    }
+
+    .btn-time {
+      padding: 6px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #fff;
+      font-size: 13px;
+      color: #374151;
+      cursor: pointer;
+    }
+
+    .btn-tz {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 4px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      gap: 1px;
+    }
+
+    .btn-tz .tz-label {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .btn-tz .tz-value {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: #374151;
+      font-weight: 500;
+    }
+
+    .btn-tz .chevron {
+      font-size: 10px;
+      color: #9ca3af;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(160deg, #f3f0ff 0%, #ede9fe 40%, #f5f3ff 100%);
+      padding: 72px 24px 60px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 52px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 36px;
+      letter-spacing: -1px;
+    }
+
+    .search-wrap {
+      display: flex;
+      align-items: center;
+      max-width: 640px;
+      margin: 0 auto;
+      background: #fff;
+      border: 1px solid #e5e5ed;
+      border-radius: 10px;
+      padding: 10px 14px;
+      gap: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .search-icon {
+      color: #9ca3af;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .search-wrap input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      color: #374151;
+      background: transparent;
+    }
+
+    .search-wrap input::placeholder {
+      color: #9ca3af;
+    }
+
+    .btn-ai {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #7c3aed;
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 7px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+
+    .btn-ai:hover {
+      background: #6d28d9;
+    }
+
+    .btn-ai .sparkle {
+      font-size: 13px;
+    }
+
+    .kbd {
+      display: inline-flex;
+      align-items: center;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-size: 12px;
+      color: #6b7280;
+      flex-shrink: 0;
+    }
+
+    /* ── Content ── */
+    .content {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 48px 24px 64px;
+    }
+
+    .section-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 16px;
+    }
+
+    .cards {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .cards.three {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .cards.two {
+      grid-template-columns: repeat(2, 1fr);
+      max-width: 640px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 22px 24px;
+      cursor: pointer;
+      transition: box-shadow 0.15s, border-color 0.15s;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      border-color: #c4b5fd;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 768px) {
+      .cards.three {
+        grid-template-columns: 1fr;
+      }
+      .cards.two {
+        grid-template-columns: 1fr;
+        max-width: 100%;
+      }
+      .hero h1 {
+        font-size: 36px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="nav-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      Metrics
+    </div>
+
+    <div class="nav-tabs">
+      <div class="nav-tab">Overview</div>
+      <div class="nav-tab active">Explorer</div>
+      <div class="nav-tab">Summary</div>
+      <div class="nav-tab">Volume</div>
+      <div class="nav-tab more">···</div>
+    </div>
+
+    <div class="nav-right">
+      <button class="btn-outline">
+        Configure Metrics
+        <span class="chevron">▾</span>
+      </button>
+      <button class="btn-time">1h</button>
+      <button class="btn-tz">
+        <span class="tz-label">UTC-05:00</span>
+        <span class="tz-value">Past 1 Hour <span class="chevron">▾</span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>Ask. Analyze. Act.</h1>
+    <div class="search-wrap">
+      <span class="search-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </span>
+      <input id="heroSearch" type="text" placeholder="Search metrics, tags, or ask a question..." />
+      <button class="btn-ai" onclick="heroSearch()">
+        <span class="sparkle">✦</span> AI
+      </button>
+      <span class="kbd">⌘K</span>
+    </div>
+  </section>
+
+  <script>
+    function heroSearch() {
+      const q = document.getElementById('heroSearch').value.trim();
+      if (!q) return;
+      // "list" intent → search-results, otherwise → query experience
+      const listIntent = /\b(list|show me all|all metrics|every metric|browse)\b/i.test(q);
+      window.location.href = listIntent
+        ? 'search-results.html?q=' + encodeURIComponent(q)
+        : 'query-result.html?q=' + encodeURIComponent(q);
+    }
+    document.getElementById('heroSearch').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') heroSearch();
+    });
+  </script>
+
+  <!-- Content -->
+  <main class="content">
+
+    <div class="section-label">Quick start</div>
+    <div class="cards three">
+      <a class="card" href="query-result.html" style="text-decoration:none;color:inherit;">
+        <div class="card-title">Querying</div>
+        <div class="card-desc">What's the max number of failed checkouts in prod, broken down by availability zone?</div>
+      </a>
+      <a class="card" href="health-monitoring.html" style="text-decoration:none;color:inherit;">
+        <div class="card-title">Health Monitoring</div>
+        <div class="card-desc">Show me metrics that monitor the health of my platform</div>
+      </a>
+      <a class="card" href="cost-optimization.html" style="text-decoration:none;color:inherit;">
+        <div class="card-title">Cost Optimization</div>
+        <div class="card-desc">Which metrics are consuming the most volume and should be optimized?</div>
+      </a>
+    </div>
+
+  </main>
+
+</body>
+</html>
